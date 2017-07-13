@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RewardCard.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.model.dashboard.cards</a> &gt; <span class="el_source">RewardCard.java</span></div><h1>RewardCard.java</h1><pre class="source lang-java linenums">/**
+ * 
+ */
+package it.polimi.ingsw.cg25.model.dashboard.cards;
+
+import java.util.List;
+
+import it.polimi.ingsw.cg25.model.PlayerCD4;
+import it.polimi.ingsw.cg25.model.dashboard.bonus.Bonus;
+import it.polimi.ingsw.cg25.model.dashboard.bonus.Bonusable;
+
+/**
+ * @author Davide
+ *
+ */
+public class RewardCard implements Card, Bonusable {
+	/**
+	 * Bonuses of the card
+	 * @see Bonus
+	 */
+	private final List&lt;Bonus&gt; bonuses;
+
+	/**
+	 * Create a Reward Card
+	 * 
+	 * @param List&lt;Bonus&gt;:
+	 *            a not empty list of bonuses to attach to the card
+	 */
+<span class="fc" id="L29">	public RewardCard(List&lt;Bonus&gt; bonuses) {</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">		if (bonuses.isEmpty())</span>
+<span class="fc" id="L31">			throw new IllegalArgumentException(&quot;Almost a Bonus is required to create a Reward Card&quot;);</span>
+<span class="fc" id="L32">		this.bonuses = bonuses;</span>
+<span class="fc" id="L33">	}</span>
+
+	/**
+	 * Return the list of bonuses attached to the card
+	 * 
+	 * @return List&lt;Bonus&gt; : the bonuses
+	 */
+	public List&lt;Bonus&gt; getBonuses() {
+<span class="fc" id="L41">		return bonuses;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+<span class="fc" id="L51">		StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L52">		sb.append(&quot;Reward Card: Bonus = &quot;);</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">		if(bonuses.isEmpty())</span>
+<span class="nc" id="L54">			sb.append(&quot;none&quot;);</span>
+		else {
+<span class="fc bfc" id="L56" title="All 2 branches covered.">		for(Bonus b : bonuses)</span>
+<span class="fc" id="L57">			sb.append(b + &quot;, &quot;);</span>
+<span class="fc" id="L58">		sb.setLength(sb.length() - 2);</span>
+		}
+<span class="fc" id="L60">		return sb.toString();</span>
+	}
+
+	@Override
+	public void takeAllBonuses(PlayerCD4 target) {
+<span class="fc bfc" id="L65" title="All 2 branches covered.">		for (Bonus b : bonuses)</span>
+<span class="fc" id="L66">			b.acquireBonus(target);</span>
+<span class="fc" id="L67">		bonuses.clear();</span>
+<span class="fc" id="L68">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

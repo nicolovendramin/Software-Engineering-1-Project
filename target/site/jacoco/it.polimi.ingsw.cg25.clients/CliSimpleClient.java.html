@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CliSimpleClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.clients</a> &gt; <span class="el_source">CliSimpleClient.java</span></div><h1>CliSimpleClient.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.clients;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import it.polimi.ingsw.cg25.views.RMIView;
+import it.polimi.ingsw.cg25.actions.DisplayInteraction;
+import it.polimi.ingsw.cg25.actions.Interaction;
+import it.polimi.ingsw.cg25.communication.VectorPacket;
+import it.polimi.ingsw.cg25.gamegenerics.GameLogger;
+import it.polimi.ingsw.cg25.observer.Observable;
+import it.polimi.ingsw.cg25.observer.Observer;
+import it.polimi.ingsw.cg25.servers.RMIServerInterface;
+import it.polimi.ingsw.cg25.views.RMIViewRemote;
+import it.polimi.ingsw.cg25.views.SocketView;
+/**
+ * 
+ * @author nicolo
+ *
+ */
+<span class="nc" id="L28">public class CliSimpleClient extends Observable&lt;VectorPacket&lt;Interaction&gt;&gt; implements Observer&lt;VectorPacket&lt;Interaction&gt;&gt; {</span>
+	
+	/**
+	 * Reprents,if not null, the action interaction which the user is currently filling
+	 */
+	private Interaction actionInteraction;
+	/**
+	 * The writer for the ouput
+	 */
+	private PrintWriter writer;
+	/**
+	 * The logger of the cli interface
+	 */
+	private GameLogger logger;
+	/**
+	 * A state variable to indicate if the user is still 
+	 */
+<span class="nc" id="L45">	private boolean end = false;</span>
+	
+	
+	/**
+	 * The main which starts the client and, after that the process is
+	 * closed advertises the event to its views
+	 * @param args
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public static void main(String []args) throws IOException, InterruptedException {
+<span class="nc" id="L56">		CliSimpleClient client = new CliSimpleClient();</span>
+<span class="nc" id="L57">		client.start();</span>
+<span class="nc" id="L58">		Interaction finish = new DisplayInteraction&lt;String&gt;(&quot;quit&quot;);</span>
+<span class="nc" id="L59">		client.notifyObservers(new VectorPacket&lt;Interaction&gt;(finish,&quot;Quit&quot;,0,0));</span>
+<span class="nc" id="L60">		client.removeAllObservers();</span>
+<span class="nc" id="L61">	}</span>
+	
+	/**
+	 * This routine starts the client asking him which kind of connection he prefers and other connection datas.
+	 * The user can choose between Socket or RMI
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public void start() throws IOException, InterruptedException {
+		//The CliClient
+		//is a client in which you have to choose how to connect to the server
+		//rmi or socket connection are available
+		//and after this you just send the Interactions you receive on the right canal
+<span class="nc" id="L75">		Scanner input = new Scanner(System.in);</span>
+<span class="nc" id="L76">		this.writer = new PrintWriter(System.out);</span>
+<span class="nc" id="L77">		this.logger = new GameLogger(&quot;CLISimpleClientLogger&quot;, GameLogger.DEFAULT_LOG_PATH);</span>
+<span class="nc" id="L78">		this.logger.log(&quot;CLI Simple Client started&quot;);</span>
+<span class="nc" id="L79">		ExecutorService executor = Executors.newCachedThreadPool();</span>
+<span class="nc" id="L80">		end = false;</span>
+<span class="nc" id="L81">		writer.println(&quot;******************* Command Line Interface *******************\n&quot;);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		while(!end) {</span>
+<span class="nc" id="L83">			writer.println(&quot;Choose connection type, write \&quot;Socket\&quot; or \&quot;Rmi\&quot;. Type \'?\' for help&quot;);</span>
+<span class="nc" id="L84">			writer.flush();</span>
+<span class="nc" id="L85">			String conTypeInit = input.nextLine();</span>
+			//Lower case
+<span class="nc" id="L87">			String conType = conTypeInit.toLowerCase().replaceAll(&quot; &quot;,&quot;&quot;);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">			if(&quot;socket&quot;.equals(conType)) {</span>
+<span class="nc" id="L89">				end = socketStart(executor,input);</span>
+<span class="nc" id="L90">			}</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			else if(&quot;rmi&quot;.equals(conType)) {</span>
+<span class="nc" id="L92">				end = rmiStart(executor,input);</span>
+<span class="nc" id="L93">			}</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			else if(&quot;?&quot;.equals(conType)) {</span>
+<span class="nc" id="L95">				writer.println(&quot;You will be kindly requested to insert in the order:&quot;);</span>
+<span class="nc" id="L96">				writer.println(&quot;\t1) the connection type, Socket or RMI&quot;);</span>
+<span class="nc" id="L97">				writer.println(&quot;\t2) the IP server address&quot;);</span>
+<span class="nc" id="L98">				writer.println(&quot;\t3) the number of the server welcome socket\n&quot;);</span>
+<span class="nc" id="L99">				writer.flush();</span>
+<span class="nc" id="L100">			}</span>
+			else {
+<span class="nc" id="L102">				writer.println(&quot;Command not recognised!\n&quot;);</span>
+<span class="nc" id="L103">				writer.flush();</span>
+			}
+		}
+		//Qui è già avvenuta l'inizializzazione
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		while(end) {</span>
+<span class="nc" id="L108">			String command = input.nextLine();</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">			if(!end)</span>
+<span class="nc" id="L110">				;</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			else if(&quot;quit&quot;.equals(command))</span>
+			{
+<span class="nc" id="L113">				Interaction finish = new DisplayInteraction&lt;String&gt;(&quot;quit&quot;);</span>
+<span class="nc" id="L114">				this.notifyObservers(new VectorPacket&lt;Interaction&gt;(finish,&quot;Quit&quot;,0,0));</span>
+<span class="nc" id="L115">				end = false;</span>
+<span class="nc" id="L116">			}</span>
+			else
+				//Parsa il comando post-inizializzazione
+<span class="nc" id="L119">				this.process(command);</span>
+		}
+<span class="nc" id="L121">		writer.println(&quot;It was nice while it lasted.&quot;);</span>
+<span class="nc" id="L122">		writer.flush();</span>
+<span class="nc" id="L123">		this.logger.close();</span>
+<span class="nc" id="L124">		return;</span>
+	}
+	
+	/**
+	 * The starting procedure for RMIconnection
+	 * @param executor is the executor that runs the rmi routine
+	 * @param is the scanner of the input line
+	 * @return whether the connection was successfull or not
+	 * @throws RemoteException if the specified port or ip is wrong
+	 */
+	private boolean rmiStart(ExecutorService executor,Scanner input) throws RemoteException{
+<span class="nc" id="L135">		RMIView&lt;VectorPacket&lt;Interaction&gt;&gt; view = new RMIView&lt;&gt;(0);</span>
+<span class="nc" id="L136">		writer.println(&quot;Insert the IP address of the server (in dotted decimal notation):&quot;);</span>
+<span class="nc" id="L137">		writer.flush();</span>
+<span class="nc" id="L138">		String ip = input.nextLine();</span>
+<span class="nc" id="L139">		writer.println(&quot;Insert the number of the port of the welcome socket:&quot;);</span>
+<span class="nc" id="L140">		writer.flush();</span>
+		try{
+<span class="nc" id="L142">			int port = Integer.parseInt(input.nextLine());</span>
+<span class="nc" id="L143">			Registry registry = LocateRegistry.getRegistry(ip, port);</span>
+<span class="nc" id="L144">			RMIServerInterface server = (RMIServerInterface)registry.lookup(&quot;CD4&quot;);</span>
+<span class="nc" id="L145">			RMIViewRemote twin = server.connectToRmi(view);</span>
+<span class="nc" id="L146">			view.attachTwin(twin);</span>
+<span class="nc" id="L147">			this.attachObserver(view);</span>
+<span class="nc" id="L148">			view.getObservableRmi().attachObserver(this);</span>
+<span class="nc" id="L149">			writer.println(&quot;Connection accepted. Type \'?\' for help&quot;);</span>
+<span class="nc" id="L150">			writer.flush();</span>
+<span class="nc" id="L151">		}</span>
+<span class="nc" id="L152">		catch(Exception e){</span>
+<span class="nc" id="L153">			logger.log(e, &quot;Conncection to RMI server is failed&quot;);</span>
+<span class="nc" id="L154">			writer.println(&quot;Connection failed, please check your inputs and retry.&quot;);</span>
+<span class="nc" id="L155">			writer.println(e.getMessage());</span>
+<span class="nc" id="L156">			writer.flush();</span>
+<span class="nc" id="L157">			return false;</span>
+		}
+<span class="nc" id="L159">		return true;</span>
+		
+	}
+	
+	/**
+	 * The starting procedure for socket connection
+	 * @param executor is the executor that runs the socket routine
+	 * @param is the scanner of the input line
+	 * @return whether the connection was successfull or not
+	 */
+	private boolean socketStart(ExecutorService executor, Scanner input) {
+<span class="nc" id="L170">		writer.println(&quot;Insert the IP address of the server (in dotted decimal notation):&quot;);</span>
+<span class="nc" id="L171">		writer.flush();</span>
+<span class="nc" id="L172">		String ip = input.nextLine();</span>
+<span class="nc" id="L173">		writer.println(&quot;Insert the number of the port of the welcome socket:&quot;);</span>
+<span class="nc" id="L174">		writer.flush();</span>
+		try{
+			SocketView&lt;VectorPacket&lt;Interaction&gt;,VectorPacket&lt;Interaction&gt;&gt; view;
+			Socket socket;
+<span class="nc" id="L178">			int port = Integer.parseInt(input.nextLine());</span>
+<span class="nc" id="L179">			socket = new Socket(ip,port);</span>
+<span class="nc" id="L180">			view = new SocketView&lt;&gt;(socket,0);</span>
+<span class="nc" id="L181">			view.attachObserver(this);</span>
+<span class="nc" id="L182">			this.attachObserver(view);</span>
+<span class="nc" id="L183">			view.run(&quot;RemoteInput&quot;);</span>
+<span class="nc" id="L184">			writer.println(&quot;Connection accepted. Type \'?\' for help&quot;);</span>
+<span class="nc" id="L185">			writer.flush();</span>
+<span class="nc" id="L186">			return true;</span>
+			}
+<span class="nc" id="L188">		catch(NumberFormatException e){</span>
+<span class="nc" id="L189">			writer.println(&quot;You made some mistakes compiling the required fields. Try again from scratch!&quot;);</span>
+<span class="nc" id="L190">			writer.flush();</span>
+<span class="nc" id="L191">			this.logger.log(e,&quot;You made some mistakes compiling the required fields. Try again from scratch!&quot;);</span>
+<span class="nc" id="L192">			return false;</span>
+		}
+<span class="nc" id="L194">		catch(UnknownHostException e){</span>
+<span class="nc" id="L195">			writer.println(&quot;I don't know the specified host sorry.&quot;);</span>
+<span class="nc" id="L196">			writer.flush();</span>
+<span class="nc" id="L197">			this.logger.log(e, &quot;I don't know the specified host sorry.&quot;);</span>
+<span class="nc" id="L198">			return false;</span>
+		}
+<span class="nc" id="L200">		catch(IOException e){</span>
+<span class="nc" id="L201">			writer.println(&quot;Uncorrect host port\n&quot;);</span>
+<span class="nc" id="L202">			writer.flush();</span>
+<span class="nc" id="L203">			this.logger.log(e, &quot;Uncorrect host port&quot;);</span>
+<span class="nc" id="L204">			return false;</span>
+		}
+<span class="nc" id="L206">		catch(IllegalArgumentException e){</span>
+<span class="nc" id="L207">			writer.println(&quot;You made some mistakes compiling the required fields. Try again from scratch!&quot;);</span>
+<span class="nc" id="L208">			writer.flush();</span>
+<span class="nc" id="L209">			this.logger.log(e,&quot;You made some mistakes compiling the required fields. Try again from scratch!&quot;);</span>
+<span class="nc" id="L210">			return false;</span>
+		}
+	}
+	
+	/**
+	 * This method is meant to process the command received as parameter, to parse
+	 * it and to perform the corresponding action
+	 * @param command is the String description of the command
+	 */
+	public void process(String command){
+		//Here we should parse the input and send t
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		if(command.startsWith(&quot;[Action]&quot;))</span>
+		{
+			try {
+<span class="nc bnc" id="L224" title="All 2 branches missed.">				if(this.actionInteraction == null)</span>
+				{
+<span class="nc" id="L226">					writer.println(&quot;You are not currently asked to perform actions!&quot;);</span>
+<span class="nc" id="L227">					writer.flush();</span>
+				}
+<span class="nc" id="L229">			Interaction temp = this.actionInteraction;</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">			if(command.contains(&quot;abort&quot;)){</span>
+<span class="nc" id="L231">				temp = new DisplayInteraction&lt;String&gt;(&quot;[[Abort]]&quot;,&quot;[[Abort]]&quot;);</span>
+<span class="nc" id="L232">			}</span>
+			else
+			{
+<span class="nc" id="L235">				this.actionInteraction.registerReply(command.replaceFirst(&quot;\\[Action\\]&quot;, &quot;&quot;));</span>
+			}
+<span class="nc" id="L237">			this.notifyObservers(new VectorPacket&lt;Interaction&gt;(temp,&quot;Action&quot;,0,0));</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">			if(temp==this.actionInteraction)</span>
+<span class="nc" id="L239">				actionInteraction = null;</span>
+<span class="nc" id="L240">			}</span>
+<span class="nc" id="L241">			catch(Exception e){</span>
+<span class="nc" id="L242">				writer.println(e.getMessage());</span>
+<span class="nc" id="L243">				writer.flush();</span>
+<span class="nc" id="L244">				this.logger.log(e, &quot;Erorr in CLI.process()&quot;);</span>
+			}
+<span class="nc" id="L246">		}</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">		else if(command.startsWith(&quot;[Chat]&quot;)) {</span>
+<span class="nc" id="L248">			Interaction inter = new DisplayInteraction&lt;String&gt;(command.replaceFirst(&quot;\\[Chat\\]&quot;, &quot;&quot;));</span>
+<span class="nc" id="L249">			this.notifyObservers(new VectorPacket&lt;Interaction&gt;(inter,&quot;Chat&quot;,0,0));</span>
+<span class="nc" id="L250">		}</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		else if(command.startsWith(&quot;[Pm]&quot;))</span>
+		{
+<span class="nc" id="L253">			String fixed = command.replaceFirst(&quot;\\[Pm\\]&quot;, &quot;&quot;);</span>
+<span class="nc" id="L254">			Interaction inter = new DisplayInteraction&lt;String&gt;(fixed);</span>
+<span class="nc" id="L255">			this.notifyObservers(new VectorPacket&lt;Interaction&gt;(inter,&quot;Pm&quot;,0,0));</span>
+<span class="nc" id="L256">		}</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">		else if(command.startsWith(&quot;[Refresh]&quot;))</span>
+		{
+<span class="nc" id="L259">			String fixed = command.replaceFirst(&quot;\\[Refresh\\]&quot;, &quot;&quot;);</span>
+<span class="nc" id="L260">			Interaction inter = new DisplayInteraction&lt;String&gt;(fixed);</span>
+<span class="nc" id="L261">			this.notifyObservers(new VectorPacket&lt;Interaction&gt;(inter,&quot;Status&quot;,0,0));</span>
+<span class="nc" id="L262">		}</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		else if(command.startsWith(&quot;[SetUsername]&quot;)) {</span>
+<span class="nc" id="L264">			String newUserName = command.replaceFirst(&quot;\\[SetUsername\\]&quot;,&quot;&quot;);</span>
+<span class="nc" id="L265">			Interaction inter = new DisplayInteraction&lt;String&gt;(newUserName);</span>
+<span class="nc" id="L266">			this.notifyObservers(new VectorPacket&lt;Interaction&gt;(inter,&quot;SetUsername&quot;,0,0));</span>
+<span class="nc" id="L267">		}</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">		else if(command.startsWith(&quot;[Disconnect]&quot;)) {</span>
+<span class="nc" id="L269">			String report = command.replaceFirst(&quot;\\[Disconnect\\]&quot;,&quot;Quit message:\&quot;&quot;).concat(&quot;\&quot;&quot;);</span>
+<span class="nc" id="L270">			Interaction inter = new DisplayInteraction&lt;String&gt;(report);</span>
+<span class="nc" id="L271">			this.notifyObservers(new VectorPacket&lt;Interaction&gt;(inter,&quot;Disconnection&quot;,0,0));</span>
+<span class="nc" id="L272">		}</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">		else if(command.startsWith(&quot;[Connect]&quot;)) {</span>
+<span class="nc" id="L274">			String report = command.replaceFirst(&quot;\\[Connect\\]&quot;,&quot;Reconnection message:\&quot;&quot;).concat(&quot;\&quot;&quot;);</span>
+<span class="nc" id="L275">			Interaction inter = new DisplayInteraction&lt;String&gt;(report);</span>
+<span class="nc" id="L276">			this.notifyObservers(new VectorPacket&lt;Interaction&gt;(inter,&quot;Connection&quot;,0,0));</span>
+<span class="nc" id="L277">		}</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">		else if(&quot;?&quot;.equals(command)) {</span>
+<span class="nc" id="L279">			writer.println(&quot;Useful commands:&quot;);</span>
+<span class="nc" id="L280">			writer.println(&quot;\t[SetUsername]&lt;name&gt;\t\tset the user's nickname&quot;);</span>
+<span class="nc" id="L281">			writer.println(&quot;\t[Action]&lt;action number&gt;\t\tchoose the selected action&quot;);</span>
+<span class="nc" id="L282">			writer.println(&quot;\t[Action]abort\t\t\texit an action and start it again&quot;);</span>
+<span class="nc" id="L283">			writer.println(&quot;\t[Chat]&lt;message&gt;\t\t\tsend the message to all the other players&quot;);</span>
+<span class="nc" id="L284">			writer.println(&quot;\t[Pm]&lt;message&gt;@@&lt;receiver&gt;\tsend a private message to the specified player&quot;);</span>
+<span class="nc" id="L285">			writer.println(&quot;\t[Disconnect]&lt;report message&gt;\tdisconnects you from the game&quot;);</span>
+<span class="nc" id="L286">			writer.println(&quot;\t[Connect]&lt;report message&gt;\treconnects you to the game&quot;);</span>
+<span class="nc" id="L287">			writer.println(&quot;\t[Refresh]\t\t\tasks the server to send you the updated status of the game&quot;);</span>
+<span class="nc" id="L288">			writer.flush();</span>
+<span class="nc" id="L289">		}</span>
+		else {
+<span class="nc" id="L291">			writer.println(&quot;Command not recognised!\n&quot;);</span>
+<span class="nc" id="L292">			writer.flush();</span>
+		}
+<span class="nc" id="L294">	}</span>
+
+	@Override
+	public void update() {
+
+<span class="nc" id="L299">	}</span>
+
+	@Override
+	public void update(VectorPacket&lt;Interaction&gt; change) {
+<span class="nc bnc" id="L303" title="All 2 branches missed.">		if(&quot;Action&quot;.equals(change.getType()))</span>
+		{
+<span class="nc" id="L305">			this.actionInteraction = change.getContent();</span>
+<span class="nc" id="L306">			writer.println(this.actionInteraction.printOptions());</span>
+<span class="nc" id="L307">			writer.flush();</span>
+<span class="nc" id="L308">		}</span>
+<span class="nc bnc" id="L309" title="All 4 branches missed.">		else if(&quot;Quit&quot;.equals(change.getType()) &amp;&amp; change.getContent().printOptions().contains(&quot;quit&quot;))</span>
+		{
+<span class="nc" id="L311">			writer.println(&quot;The server has closed the connection.\n&quot; + change.getContent().printOptions().replaceFirst(&quot;quit&quot;, &quot;&quot;));</span>
+<span class="nc" id="L312">			writer.flush();</span>
+<span class="nc" id="L313">			this.end = false;</span>
+<span class="nc" id="L314">		}</span>
+		else
+		{
+<span class="nc" id="L317">			writer.println(change.getContent().printOptions());</span>
+<span class="nc" id="L318">			writer.flush();</span>
+		}
+<span class="nc" id="L320">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

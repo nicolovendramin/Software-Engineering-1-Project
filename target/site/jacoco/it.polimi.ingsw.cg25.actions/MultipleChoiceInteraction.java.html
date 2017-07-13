@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MultipleChoiceInteraction.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.actions</a> &gt; <span class="el_source">MultipleChoiceInteraction.java</span></div><h1>MultipleChoiceInteraction.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.actions;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.function.Predicate;
+
+/**
+ * 
+ * @author nicolo
+ *
+ * @param &lt;C&gt; the Type of the object between which to choose
+ */
+public class MultipleChoiceInteraction&lt;C extends Serializable&gt; extends Interaction {
+
+	/**
+	 * Serial number for serial communication
+	 */
+	private static final long serialVersionUID = 6894972788381212623L;
+	/**
+	 * A List of serializable objects to choose among
+	 */
+	private List&lt;C&gt; choices;
+	/**
+	 * The List of chosen objects
+	 */
+	private List&lt;C&gt; reply;
+	/**
+	 * The minimum number of objects you can choose
+	 */
+<span class="fc" id="L34">	private int lowerBound = -1;</span>
+	/**
+	 * The maximum number of objects you can choose
+	 */
+<span class="fc" id="L38">	private int upperBound = -1;</span>
+	
+	/**
+	 * Constructor which sets the options to the given one and the question to the default question
+	 * @param options are th options between to choose
+	 * @throws IllegalArgumentException when the options are null or empty
+	 */
+<span class="fc" id="L45">	public MultipleChoiceInteraction(List&lt;C&gt; options) {</span>
+<span class="fc" id="L46">		this.setQuestion(&quot;Choose between the following elements&quot;);</span>
+<span class="fc bfc" id="L47" title="All 4 branches covered.">		if(options==null || options.isEmpty())</span>
+<span class="fc" id="L48">			throw new IllegalArgumentException(&quot;Too few options&quot;);</span>
+<span class="fc" id="L49">		this.choices = options;</span>
+<span class="fc" id="L50">	}</span>
+	
+
+	/**
+	 * Creates a new MultipleChoiceInteraction filtering the options of the given one
+	 * using the specified predicate
+	 * @param former is the SingleChoiceInteraction whose options we want to filter
+	 * @param filter is the predicate we want to use as filter
+	 */
+	public MultipleChoiceInteraction(MultipleChoiceInteraction&lt;C&gt; former, Predicate&lt;C&gt; filter)
+<span class="fc" id="L60">	{</span>
+<span class="fc" id="L61">		List&lt;C&gt; newChoices = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L62">		former.choices.stream().filter(filter).forEach(newChoices::add);</span>
+		
+<span class="fc bfc" id="L64" title="All 2 branches covered.">		if(newChoices.isEmpty())</span>
+<span class="fc" id="L65">			this.choices = former.choices;</span>
+		else {
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">			if(newChoices.size() &gt;= this.lowerBound)</span>
+<span class="fc" id="L68">				this.choices = newChoices;</span>
+			else
+<span class="nc" id="L70">				this.choices = former.choices;	</span>
+<span class="fc" id="L71">			this.lowerBound = former.lowerBound;</span>
+<span class="fc" id="L72">			this.upperBound = former.upperBound;</span>
+		}
+<span class="fc" id="L74">	}</span>
+	
+	/**
+	 * Creates the interaction specifying both the options and the question
+	 * @param question is the question of the Interaction
+	 * @param options are the elements beetween whoose to choose
+	 */
+	public MultipleChoiceInteraction(String question, List&lt;C&gt; options)
+	{
+<span class="fc" id="L83">		this(options);</span>
+<span class="fc" id="L84">		super.setQuestion(question);</span>
+<span class="fc" id="L85">	}</span>
+	
+	/**
+	 * Creates a new MultipleChoiceInteraction with the bounds for the number of element to choose
+	 * @param question is the question of the INteraction
+	 * @param options is the group of elements between whose to choose
+	 * @param lowB is the min number of elements that can be chosen(set -1 to leave unspecified)
+	 * @param upB is the max number of elements that can be chosen (set -1 to leave unspecified)
+	 */
+	public MultipleChoiceInteraction(String question,List&lt;C&gt; options,int lowB,int upB) throws IllegalArgumentException
+	{
+<span class="fc" id="L96">		this(question, options);</span>
+<span class="fc" id="L97">		this.lowerBound = lowB;</span>
+<span class="fc" id="L98">		this.upperBound = upB;</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">		if(options.size()&lt;lowB)</span>
+<span class="fc" id="L100">			throw new IllegalArgumentException(&quot;Too few arguments&quot;);</span>
+<span class="fc" id="L101">		this.setQuestion(questionBounder(question));</span>
+<span class="fc" id="L102">	}</span>
+	
+	/**
+	 * This formats the question to specify the bounds
+	 * @param question is the new question for the interaction
+	 * @return the question with the bounds specified
+	 */
+	private String questionBounder(String question)
+	{
+<span class="fc" id="L111">		StringBuilder s = new StringBuilder();</span>
+<span class="fc" id="L112">		s.append(question);</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">		if(lowerBound != -1) </span>
+<span class="fc" id="L114">			s.append(&quot;\nNot less than &quot;).append(Integer.toString(lowerBound));</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">		if(upperBound != -1) </span>
+<span class="fc" id="L116">			s.append(&quot;, no more than &quot;).append(Integer.toString(upperBound));</span>
+<span class="fc" id="L117">		return s.toString();</span>
+	}
+	
+	public List&lt;C&gt; getChoices(){
+<span class="fc" id="L121">		return this.choices;</span>
+	}
+	
+	/**
+	 * This is made to register the reply to the interaction
+	 * @param reply is the string encoding the reply
+	 */
+	@Override
+	public void registerReply(String reply) {
+		//Create a Set of Integers for indexes
+<span class="fc" id="L131">		Set&lt;Integer&gt; indexes = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L132">		StringTokenizer st = new StringTokenizer(reply,&quot;,&quot;);</span>
+<span class="fc" id="L133">		this.reply = new ArrayList&lt;&gt;();</span>
+		
+<span class="fc bfc" id="L135" title="All 2 branches covered.">		while(st.hasMoreTokens())</span>
+		{
+			try {
+<span class="fc" id="L138">			String temp = st.nextElement().toString();</span>
+<span class="fc" id="L139">			indexes.add(Integer.parseInt(temp));</span>
+			}
+<span class="nc" id="L141">			catch(NumberFormatException e) {</span>
+<span class="nc" id="L142">				throw new IllegalArgumentException(&quot;The given input is not valid!&quot;, e);</span>
+<span class="fc" id="L143">			}</span>
+		}
+		
+<span class="fc bfc" id="L146" title="All 2 branches covered.">		for(Integer i : indexes) {</span>
+			try
+			{
+<span class="fc" id="L149">				this.reply.add(this.choices.get(i));</span>
+			}
+<span class="fc" id="L151">			catch(IndexOutOfBoundsException e)</span>
+			{
+<span class="fc" id="L153">				throw new IllegalArgumentException(&quot;The given input is not valid!&quot;,e);</span>
+<span class="fc" id="L154">			}</span>
+<span class="fc" id="L155">		}</span>
+<span class="fc bfc" id="L156" title="All 4 branches covered.">		if(this.reply.size()&gt;this.upperBound &amp;&amp; upperBound&gt; 0) </span>
+		{
+<span class="fc" id="L158">			this.reply = null;</span>
+<span class="fc" id="L159">			throw new IllegalArgumentException(&quot;Too much items selected&quot;);</span>
+		}
+<span class="pc bpc" id="L161" title="1 of 4 branches missed.">		if(this.reply.size()&lt;this.lowerBound &amp;&amp; lowerBound &gt;= 0)</span>
+		{
+<span class="fc" id="L163">			this.reply = null;</span>
+<span class="fc" id="L164">			throw new IllegalArgumentException(&quot;You need to select more items&quot;);</span>
+		}
+<span class="fc" id="L166">	}</span>
+	
+	/**
+	 * This method returns a formatted string representation of the interaction
+	 */
+	@Override
+	public String printOptions() {
+<span class="fc" id="L173">		StringBuilder s = new StringBuilder(this.getQuestion());</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">		for(int i=0;i&lt;choices.size();i++)</span>
+		{
+<span class="fc" id="L176">			s.append(&quot;\n&quot;).append(Integer.toString(i)).append(&quot;)&quot;).append(choices.get(i).toString());</span>
+		}
+<span class="fc" id="L178">		return s.toString();</span>
+	}
+	
+	/**
+	 * This method returns the elements chosen as reply for the Interaction
+	 * @return the chosen elements
+	 * @throws NullPointerException if called before that the reply has been registered
+	 */
+	public List&lt;C&gt; getReply(){
+<span class="fc bfc" id="L187" title="All 2 branches covered.">		if(this.reply == null) </span>
+<span class="fc" id="L188">			throw new NullPointerException(&quot;The reply has not been registered yet&quot;);</span>
+<span class="fc" id="L189">		return this.reply;</span>
+	}
+
+	@Override
+	public int hashCode() {
+<span class="fc" id="L194">		final int prime = 31;</span>
+<span class="fc" id="L195">		int result = super.hashCode();</span>
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">		result = prime * result + ((choices == null) ? 0 : choices.hashCode());</span>
+<span class="fc" id="L197">		result = prime * result + lowerBound;</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">		result = prime * result + ((reply == null) ? 0 : reply.hashCode());</span>
+<span class="fc" id="L199">		result = prime * result + upperBound;</span>
+<span class="fc" id="L200">		return result;</span>
+	}
+
+	/**
+	 * The equals for Interaction is called to check if the object is equal to this interaction
+	 * @param o is the object to be checked
+	 * @return true if the object is equal false otherwise
+	 */
+	@Override
+	public boolean equals(Object o) {
+<span class="fc bfc" id="L210" title="All 2 branches covered.">		if(o==null)</span>
+<span class="fc" id="L211">			return false;</span>
+		try{
+<span class="fc bfc" id="L213" title="All 2 branches covered.">		if(o.getClass() != MultipleChoiceInteraction.class)</span>
+<span class="fc" id="L214">			return false;</span>
+		@SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L216">		MultipleChoiceInteraction&lt;C&gt; ot = (MultipleChoiceInteraction&lt;C&gt;)o;</span>
+<span class="fc" id="L217">		return ot.choices.equals(this.choices);</span>
+<span class="nc" id="L218">		}catch(Exception e){</span>
+<span class="nc" id="L219">			return false;</span>
+		}
+			
+	}
+	
+	/**
+	 * This is made to register an equivalent Interaction as a reply for this Interaction
+	 * @param i is the Interaction containing the reply
+	 */
+	@Override
+	public void registerReply(Interaction i) {
+<span class="fc bfc" id="L230" title="All 2 branches covered.">		if(i==null)</span>
+<span class="fc" id="L231">			throw new IllegalArgumentException();</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">		if(i.getClass()!=this.getClass())</span>
+<span class="fc" id="L233">			throw new IllegalArgumentException();</span>
+		else
+		{
+			@SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L237">			MultipleChoiceInteraction&lt;C&gt; c = (MultipleChoiceInteraction&lt;C&gt;)i;</span>
+<span class="fc" id="L238">			reply = c.reply;</span>
+		}
+<span class="fc" id="L240">	}</span>
+	
+	/**
+	 * Checks if the interaction has some bounds
+	 * @return true if at least one between upper and lower bound exists
+	 */
+	public boolean isBounded(){
+<span class="nc bnc" id="L247" title="All 4 branches missed.">		return upperBound&gt;0 || lowerBound&gt;0;</span>
+	}
+	
+	/**
+	 * Gets the upper Bound of the interaction.
+	 * @return the upper bound or -1 if there is not any uooer bound
+	 */
+	public int getUpperBound(){
+<span class="nc" id="L255">		return this.upperBound;</span>
+	}
+	
+	/**
+	 * Gets the lower Bound of the interaction.
+	 * @return the upper bound or -1 if there is not any lower bound
+	 */
+	public int getLowerBound(){
+<span class="nc" id="L263">		return this.lowerBound;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

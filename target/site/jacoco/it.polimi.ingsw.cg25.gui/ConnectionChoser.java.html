@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ConnectionChoser.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.gui</a> &gt; <span class="el_source">ConnectionChoser.java</span></div><h1>ConnectionChoser.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.gui;
+
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
+/**
+ * 
+ * @author nicolo
+ *
+ */
+@SuppressWarnings(&quot;serial&quot;)
+public class ConnectionChoser extends JDialog {
+
+	/**
+	 * The panel with the 2 radio buttons
+	 */
+	private final JPanel rmiSocketPanel;
+	/**
+	 * the list of radio buttons
+	 */
+<span class="nc" id="L33">	private final List&lt;JRadioButton&gt; radios = new ArrayList&lt;&gt;();</span>
+	/**
+	 * The gui that has opened this Dialog
+	 */
+	private final CoFGui gui;
+	/**
+	 * The port number selected
+	 */
+	private int portNumber;
+	/**
+	 * The label displaying the currently selected ip
+	 */
+	private JLabel ip;
+	/**
+	 * The ip inserted by the user
+	 */
+	private String ipAddress;
+	/**
+	 * The connection type in string
+	 */
+	private String connType;
+	/**
+	 * The JLabel displaying the port number that is currently selected
+	 */
+	private JLabel port;
+	
+	/**
+	 * Constructor
+	 * @param gui is the gui that has called this JDialog
+	 */
+<span class="nc" id="L63">	public ConnectionChoser(CoFGui gui){</span>
+<span class="nc" id="L64">		this.gui = gui;</span>
+<span class="nc" id="L65">		this.portNumber = gui.getPort();</span>
+<span class="nc" id="L66">		this.ipAddress = gui.getIp();</span>
+<span class="nc" id="L67">		this.connType = gui.getConnectionType();</span>
+<span class="nc" id="L68">		this.setDefaultCloseOperation(HIDE_ON_CLOSE);</span>
+<span class="nc" id="L69">		this.setLayout(null);</span>
+<span class="nc" id="L70">		this.setModal(true);</span>
+<span class="nc" id="L71">		this.setTitle(&quot;Connection Settings&quot;);</span>
+<span class="nc" id="L72">		this.getContentPane().setLayout(null);</span>
+<span class="nc" id="L73">		this.setBounds(100, 100, 240, 195);</span>
+<span class="nc" id="L74">		this.setResizable(false);</span>
+<span class="nc" id="L75">		this.rmiSocketPanel = new JPanel();</span>
+<span class="nc" id="L76">		rmiSocketPanel.setLayout(new BoxLayout(rmiSocketPanel, BoxLayout.LINE_AXIS));</span>
+<span class="nc" id="L77">		this.rmiSocketPanel.setBounds(5, 5, 225, 60);</span>
+<span class="nc" id="L78">		JRadioButton socket = new JRadioButton();</span>
+<span class="nc" id="L79">		radios.add(socket);</span>
+<span class="nc" id="L80">		socket.setText(&quot;Socket&quot;);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		socket.setSelected(!gui.getSocketRmi());</span>
+<span class="nc" id="L82">		socket.addActionListener(new radioActionListener(socket));</span>
+<span class="nc" id="L83">		JPanel socketPanel = new JPanel();</span>
+<span class="nc" id="L84">		socketPanel.add(socket);</span>
+<span class="nc" id="L85">		rmiSocketPanel.add(socketPanel);</span>
+<span class="nc" id="L86">		JRadioButton rmi = new JRadioButton();</span>
+<span class="nc" id="L87">		radios.add(rmi);</span>
+<span class="nc" id="L88">		rmi.setText(&quot;Rmi&quot;);</span>
+<span class="nc" id="L89">		rmi.setSelected(gui.getSocketRmi());</span>
+<span class="nc" id="L90">		rmi.addActionListener(new radioActionListener(rmi));</span>
+<span class="nc" id="L91">		JPanel rmiPanel = new JPanel();</span>
+<span class="nc" id="L92">		rmiPanel.add(rmi);</span>
+<span class="nc" id="L93">		rmiSocketPanel.add(rmiPanel);</span>
+<span class="nc" id="L94">		LineBorder line = new LineBorder(Color.BLACK, 1);</span>
+<span class="nc" id="L95">		TitledBorder border = new TitledBorder(line, &quot;Connection Parameters&quot;);</span>
+<span class="nc" id="L96">		rmiSocketPanel.setBorder(border);</span>
+<span class="nc" id="L97">		this.add(rmiSocketPanel);</span>
+<span class="nc" id="L98">		ip = new JLabel();</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		ip.setText(&quot;IP address:  &quot;+ (gui.getIp()==null ? &quot;not set&quot; : gui.getIp()));</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		port = new JLabel(&quot;Port Number: &quot;+ (gui.getPort()==0 ? &quot;not set&quot; : Integer.toString(gui.getPort())));</span>
+<span class="nc" id="L101">		ip.setBounds(10,70, 135, 20);</span>
+<span class="nc" id="L102">		port.setBounds(10,95,135,20);</span>
+<span class="nc" id="L103">		JButton portButton = new JButton();</span>
+<span class="nc" id="L104">		JButton ipButton = new JButton();</span>
+<span class="nc" id="L105">		portButton.setText(&quot;Set Port&quot;);</span>
+<span class="nc" id="L106">		ipButton.setText(&quot;Set IP&quot;);</span>
+<span class="nc" id="L107">		portButton.addActionListener(new changeActionListener(&quot;Insert the PORT number:&quot;));</span>
+<span class="nc" id="L108">		ipButton.addActionListener(new changeActionListener(&quot;Insert the Ip address:&quot;));</span>
+<span class="nc" id="L109">		ipButton.setBounds(155, 70, 75, 20);</span>
+<span class="nc" id="L110">		portButton.setBounds(155, 95, 75, 20);</span>
+<span class="nc" id="L111">		JButton closeAndSave = new JButton();</span>
+<span class="nc" id="L112">		closeAndSave.setText(&quot;Save&quot;);</span>
+<span class="nc" id="L113">		closeAndSave.addActionListener(new saveActionListener(this));</span>
+<span class="nc" id="L114">		closeAndSave.setBounds(155, 135, 75, 20);</span>
+<span class="nc" id="L115">		this.add(closeAndSave);</span>
+<span class="nc" id="L116">		this.add(ipButton);</span>
+<span class="nc" id="L117">		this.add(portButton);</span>
+<span class="nc" id="L118">		this.add(ip);</span>
+<span class="nc" id="L119">		this.add(port);</span>
+<span class="nc" id="L120">		closeAndSave.getRootPane().setDefaultButton(closeAndSave);</span>
+<span class="nc" id="L121">	}</span>
+	
+	/**
+	 * Updates the graphical elements to make them consistents to the latest choices of the user
+	 */
+	private void refresh(){
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		port.setText(&quot;Port Number: &quot;+ (portNumber==0 ? &quot;not set&quot; : Integer.toString(portNumber)));</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		ip.setText(&quot;IP address:  &quot;+ (ipAddress==null ? &quot;not set&quot; : ipAddress));</span>
+<span class="nc" id="L129">	}</span>
+	
+	/**
+	 * 
+	 * @author nicolo
+	 *
+	 */
+	private class radioActionListener implements ActionListener{
+		/**
+		 * The String that represent the &quot;meaning&quot; of the radio button
+		 */
+		String selector;
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			for(JRadioButton button : radios)</span>
+			{
+<span class="nc bnc" id="L146" title="All 2 branches missed.">				if(!selector.equals(button.getText()))</span>
+<span class="nc" id="L147">					button.setSelected(false);</span>
+				else
+<span class="nc" id="L149">					button.setSelected(true);</span>
+<span class="nc" id="L150">			}</span>
+<span class="nc" id="L151">			connType = selector;</span>
+<span class="nc" id="L152">		}</span>
+		
+<span class="nc" id="L154">		private radioActionListener(JRadioButton radio){</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">			if(radio.getText()==null)</span>
+<span class="nc" id="L156">				selector = &quot;empty&quot;;</span>
+			else 
+<span class="nc" id="L158">				selector = radio.getText();</span>
+<span class="nc" id="L159">		}</span>
+	}
+	
+	/**
+	 * 
+	 * @author nicolo
+	 *
+	 */
+	private class saveActionListener implements ActionListener{
+		
+		ConnectionChoser choser;
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L173" title="All 2 branches missed.">			if(gui.getIp() != ipAddress)</span>
+<span class="nc" id="L174">				gui.setIp(ipAddress);</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			if(gui.getPort() != portNumber)</span>
+<span class="nc" id="L176">				gui.setPort(portNumber);</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">			if(gui.getConnectionType()!=connType)</span>
+<span class="nc" id="L178">				gui.setConnectionType(connType);</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">			if(gui.getConnectionType()==null)</span>
+<span class="nc" id="L180">				gui.setConnectionType(&quot;Socket&quot;);</span>
+<span class="nc" id="L181">			choser.setVisible(false);</span>
+<span class="nc" id="L182">		}</span>
+		
+<span class="nc" id="L184">		private saveActionListener(ConnectionChoser choser){</span>
+<span class="nc" id="L185">			this.choser = choser;</span>
+<span class="nc" id="L186">		}</span>
+	}
+	
+	/**
+	 * 
+	 * @author nicolo
+	 *
+	 */
+	private class changeActionListener implements ActionListener{
+		
+		String selector;
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L200">			String s = JOptionPane.showInputDialog(null, selector, &quot;Connection Customization&quot;, JOptionPane.PLAIN_MESSAGE); </span>
+			try{
+<span class="nc bnc" id="L202" title="All 2 branches missed.">			if(selector.equals(&quot;Insert the PORT number:&quot;))</span>
+			{
+				try{
+<span class="nc" id="L205">					portNumber = Integer.parseInt(s);</span>
+<span class="nc" id="L206">					JOptionPane.showMessageDialog(null,&quot;Port number correctly updated to &quot;.concat(s).concat(&quot;   \nClick -save- to update&quot;),&quot;Well Done&quot;,JOptionPane.INFORMATION_MESSAGE);</span>
+<span class="nc" id="L207">				}catch(Exception e2){</span>
+<span class="nc" id="L208">					throw new IllegalArgumentException(s.concat(&quot; is not a valid port number&quot;));</span>
+<span class="nc" id="L209">				}</span>
+				
+			}
+<span class="nc bnc" id="L212" title="All 2 branches missed.">			if(selector.equals(&quot;Insert the Ip address:&quot;))</span>
+			{
+<span class="nc" id="L214">				String PATTERN = &quot;^((0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)\\.){3}(0|1\\d?\\d?|2[0-4]?\\d?|25[0-5]?|[3-9]\\d?)$&quot;;</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">			   if(s.matches(PATTERN))</span>
+			   {
+<span class="nc" id="L217">				   ipAddress = s;</span>
+<span class="nc" id="L218">				   JOptionPane.showMessageDialog(null,&quot;IP address correctly updated to &quot;.concat(s).concat(&quot;   \nClick -save- to update&quot;),&quot;Well Done&quot;,JOptionPane.INFORMATION_MESSAGE);</span>
+			   }
+			   else
+<span class="nc" id="L221">				   throw new IllegalArgumentException(s.concat(&quot; is not a valid ip&quot;));</span>
+			}
+<span class="nc" id="L223">			}catch(Exception ex){</span>
+<span class="nc" id="L224">				JOptionPane.showMessageDialog(null,ex.getMessage(),&quot;Errore&quot;,JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L225">			}</span>
+<span class="nc" id="L226">			refresh();</span>
+<span class="nc" id="L227">		}</span>
+		
+<span class="nc" id="L229">		private changeActionListener(String selector){</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">			if(selector==null)</span>
+<span class="nc" id="L231">				this.selector = &quot;empty&quot;;</span>
+			else 
+<span class="nc" id="L233">				this.selector = selector;</span>
+<span class="nc" id="L234">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

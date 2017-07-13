@@ -1,0 +1,774 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MatchCD4.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.model</a> &gt; <span class="el_source">MatchCD4.java</span></div><h1>MatchCD4.java</h1><pre class="source lang-java linenums"><span class="fc" id="L1">/**</span>
+ * 
+ */
+package it.polimi.ingsw.cg25.model;
+
+import java.io.Serializable;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.List;
+import java.util.Random;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import it.polimi.ingsw.cg25.actions.Action;
+import it.polimi.ingsw.cg25.actions.ChooseActionTypeAction;
+import it.polimi.ingsw.cg25.actions.ChooseMainActionAction;
+import it.polimi.ingsw.cg25.actions.ChooseQuickActionAction;
+import it.polimi.ingsw.cg25.actions.DisplayAction;
+import it.polimi.ingsw.cg25.actions.DisplayInteraction;
+import it.polimi.ingsw.cg25.actions.ErrorAction;
+import it.polimi.ingsw.cg25.actions.PassAction;
+import it.polimi.ingsw.cg25.communication.UnserializedVectorPacket;
+import it.polimi.ingsw.cg25.exceptions.CannotPassException;
+import it.polimi.ingsw.cg25.exceptions.CannotPerformActionException;
+import it.polimi.ingsw.cg25.exceptions.CannotSetupActionException;
+import it.polimi.ingsw.cg25.exceptions.ElementNotFoundException;
+import it.polimi.ingsw.cg25.exceptions.EndGameException;
+import it.polimi.ingsw.cg25.exceptions.NoCardsException;
+import it.polimi.ingsw.cg25.gamegenerics.ActionBasedGame;
+import it.polimi.ingsw.cg25.gamegenerics.GameLogger;
+import it.polimi.ingsw.cg25.gamegenerics.Match;
+import it.polimi.ingsw.cg25.gamegenerics.TurnBasedGame;
+import it.polimi.ingsw.cg25.model.dashboard.cards.PoliticsCard;
+import it.polimi.ingsw.cg25.model.dto.GameStatus;
+import it.polimi.ingsw.cg25.model.trade.Market;
+import it.polimi.ingsw.cg25.onlinegenerics.Applet;
+import it.polimi.ingsw.cg25.proxies.ModelProxy;
+
+/**
+ * @author Davide
+ *
+ */
+public class MatchCD4 extends Match&lt;PlayerCD4&gt; implements TurnBasedGame&lt;PlayerCD4&gt;, ActionBasedGame, Applet {
+
+	/**
+	 * The board of the match
+	 */
+	private final BoardCD4 board;
+	
+	/**
+	 * Available main actions for the current player
+	 */
+<span class="fc" id="L56">	private int currentPlayerMainActions = 1;</span>
+	
+	/**
+	 * Available quick actions for the current player
+	 */
+<span class="fc" id="L61">	private int currentPlayerQuickActions = 1;</span>
+	
+	/**
+	 * Random object
+	 */
+	private Random random;
+	
+	/**
+	 * Round counter
+	 */
+<span class="fc" id="L71">	private int roundNumber = -1;</span>
+	
+	/**
+	 * Checks if the current round is the last of the game
+	 */
+	private boolean lastRound;
+	
+	/**
+	 * Checks if someone has won 
+	 */
+	private boolean someoneWon;
+	
+	/**
+	 * Action stack for the current player
+	 * @see Action
+	 */
+	private Deque&lt;Action&gt; actionsStack;
+	
+	/**
+	 * Model proxy object
+	 */
+	private ModelProxy proxy;
+	
+	/**
+	 * Logger of the match
+	 */
+	private GameLogger logger;
+	
+	/**
+	 * Determines if the game has the market
+	 */
+	private final boolean hasMarket;
+
+	/**
+	 * Market of the match
+	 */
+	private final Market market;
+	
+	/**
+	 * Determines if the game is running
+	 */
+<span class="fc" id="L112">	private boolean running = true;</span>
+	
+	/**
+	 * Flag for computing final scores only once
+	 */
+<span class="fc" id="L117">	private boolean finalScore = false;</span>
+
+	/**
+	 * The number of emporiums per player to win the game
+	 */
+	public final int numberOfEmporiumsToWin;
+	
+	/**
+	 * Match constructor (without logger)
+	 * @param board {@link BoardCD4} the board for the match
+	 * @param proxy {@link ModelProxy} the model proxy object
+	 * @param hasMarket boolean true for a game with market
+	 * @param numberOfEmporiumsToWin is the number of emporium that the player has to build to finish the game
+	 */
+<span class="fc" id="L131">	public MatchCD4(BoardCD4 board, ModelProxy proxy, boolean hasMarket,int numberOfEmporiumsToWin) {</span>
+<span class="fc bfc" id="L132" title="All 4 branches covered.">		if(board == null || proxy == null)</span>
+<span class="fc" id="L133">			throw new IllegalArgumentException(&quot;Match constructor: Paramters cannot be null&quot;);</span>
+		// Initialize the random seed
+<span class="fc" id="L135">		this.random = new Random(System.nanoTime());</span>
+<span class="fc" id="L136">		this.actionsStack = new ArrayDeque&lt;&gt;();</span>
+<span class="fc" id="L137">		this.proxy = proxy;</span>
+<span class="fc" id="L138">		this.board = board;</span>
+<span class="fc" id="L139">		this.roundNumber = 0;</span>
+<span class="fc" id="L140">		this.logger = new GameLogger();</span>
+<span class="fc" id="L141">		this.logger.log(&quot;Match started&quot;);</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">		if(numberOfEmporiumsToWin&lt;=0)</span>
+<span class="nc" id="L143">			this.numberOfEmporiumsToWin = 10;</span>
+		else
+<span class="fc" id="L145">			this.numberOfEmporiumsToWin = Math.min(numberOfEmporiumsToWin, this.getBoard().getCities().size());</span>
+		// Market
+<span class="fc" id="L147">		this.hasMarket = hasMarket;</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">		if (this.hasMarket)</span>
+<span class="fc" id="L149">			this.market = new Market(this, proxy);</span>
+		else
+<span class="fc" id="L151">			this.market = null;</span>
+<span class="fc" id="L152">	}</span>
+	
+	/**
+	 * Match constructor (with logger)
+	 * @param board the {@link BoardCD4} for the match
+	 * @param proxy the {@link ModelProxy} object
+	 * @param hasMarket true for a game with market
+	 * @param numberOfEmporiumsToWin is the number of emporium that the player has to build to finish the game
+	 * @param logger the {@link GameLogger} for the match
+	 */
+	public MatchCD4(BoardCD4 board, ModelProxy proxy, boolean hasMarket,int numberOfEmporiumsToWin, GameLogger logger){
+<span class="fc" id="L163">		this(board,proxy,hasMarket,numberOfEmporiumsToWin);</span>
+<span class="pc bpc" id="L164" title="2 of 4 branches missed.">		if(board == null || proxy == null)</span>
+<span class="nc" id="L165">			throw new IllegalArgumentException(&quot;Match constructor: Paramters cannot be null&quot;);</span>
+<span class="fc" id="L166">		this.logger = logger;</span>
+<span class="fc" id="L167">		this.logger.log(&quot;Match started&quot;);</span>
+<span class="fc" id="L168">	}</span>
+
+	/**
+	 * Increments the number of available main action for the current player
+	 * 
+	 * @param additionalMainActions
+	 *            int the increment
+	 */
+	public void addMainAction(int additionalMainActions) {
+<span class="fc" id="L177">		this.currentPlayerMainActions += additionalMainActions;</span>
+<span class="fc" id="L178">	}</span>
+
+	/**
+	 * Decrements (1 step) the number of available quick action for the current
+	 * player
+	 * 
+	 * @throws CannotPerformActionException
+	 *             if the current player cannot do a quick action
+	 */
+	public void useQuickAction() throws CannotPerformActionException {
+<span class="fc bfc" id="L188" title="All 2 branches covered.">		if (this.currentPlayerQuickActions &lt;= 0)</span>
+<span class="fc" id="L189">			throw new CannotPerformActionException();</span>
+<span class="fc" id="L190">		this.currentPlayerQuickActions = this.currentPlayerQuickActions - 1;</span>
+<span class="fc" id="L191">	}</span>
+
+	/**
+	 * Decrements (1 step) the number of available main action for the current
+	 * player
+	 * 
+	 * @throws CannotPerformActionException
+	 *             if the current player cannot do a main action
+	 */
+	public void useMainAction() throws CannotPerformActionException {
+<span class="fc bfc" id="L201" title="All 2 branches covered.">		if (this.currentPlayerMainActions &lt;= 0)</span>
+<span class="fc" id="L202">			throw new CannotPerformActionException();</span>
+<span class="fc" id="L203">		this.currentPlayerMainActions = this.currentPlayerMainActions - 1;</span>
+<span class="fc" id="L204">	}</span>
+
+	/**
+	 * Sends a {@link GameStatus} to a player
+	 * @param player {@link PlayerCD4} the receiver player 
+	 */
+	public void informPlayer(PlayerCD4 player) {
+<span class="nc" id="L211">		DisplayAction&lt;GameStatus&gt; a = new DisplayAction&lt;&gt;(this);</span>
+<span class="nc" id="L212">		a.setup(new DisplayInteraction&lt;GameStatus&gt;(new GameStatus(this, player)));</span>
+<span class="nc" id="L213">		this.proxy.sendAction(new UnserializedVectorPacket&lt;Action&gt;(a, &quot;GameStatus&quot;, player.getUserID(), 0));</span>
+<span class="nc" id="L214">	}</span>
+
+	/**
+	 * Gets the board of the match
+	 * @return {@link BoardCD4} the board of the match
+	 */
+	public BoardCD4 getBoard() {
+<span class="fc" id="L221">		return this.board;</span>
+	}
+
+	/**
+	 * Returns the quantity of available main action for the current player
+	 * 
+	 * @return int quantity of available main action
+	 */
+	public int getRemainingMainActions() {
+<span class="fc" id="L230">		return this.currentPlayerMainActions;</span>
+	}
+
+	/**
+	 * Returns the quantity of available main action for the current player
+	 * 
+	 * @return int quantity of available main action
+	 */
+	public int getRemainingQuickActions() {
+<span class="fc" id="L239">		return this.currentPlayerQuickActions;</span>
+	}
+
+	@Override
+	public synchronized void receiveAction(Action change) {
+<span class="nc" id="L244">		String action = &quot;Action&quot;;</span>
+		// Received an action while the match isn't running
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		if (!this.running) {</span>
+<span class="nc" id="L247">			String eMessage = &quot;Match has received an action while it was not running.&quot;;</span>
+<span class="nc" id="L248">			logger.warning(eMessage);</span>
+<span class="nc" id="L249">			ErrorAction&lt;MatchCD4&gt; a = new ErrorAction&lt;&gt;(this);</span>
+<span class="nc" id="L250">			a.setup(eMessage);</span>
+<span class="nc" id="L251">			this.proxy.sendAction(</span>
+<span class="nc" id="L252">					new UnserializedVectorPacket&lt;Action&gt;(a, &quot;Error&quot;, this.getCurrentPlayer().getUserID(), 0));</span>
+<span class="nc" id="L253">			proxy.kill();</span>
+<span class="nc" id="L254">			return;</span>
+		}
+		try {
+<span class="nc" id="L257">			int exAction = this.currentPlayerMainActions;</span>
+<span class="nc" id="L258">			int exqAction = this.currentPlayerQuickActions;</span>
+<span class="nc" id="L259">			int precRound = this.roundNumber;</span>
+<span class="nc" id="L260">			PlayerCD4 prevP = this.getCurrentPlayer();</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">			if(change.isAborted())</span>
+			{
+<span class="nc" id="L263">				Action act = this.getStartingAction();</span>
+<span class="nc" id="L264">				act.setup();</span>
+<span class="nc" id="L265">				this.proxy.sendAction(new UnserializedVectorPacket&lt;Action&gt;(act, &quot;Action&quot;,</span>
+<span class="nc" id="L266">						this.getCurrentPlayer().getUserID(), 0));</span>
+<span class="nc" id="L267">				return;</span>
+			}
+<span class="nc" id="L269">			Action c = change.doAction();</span>
+<span class="nc bnc" id="L270" title="All 4 branches missed.">			if(!running &amp;&amp; change.getClass()==PassAction.class)</span>
+			{
+<span class="nc" id="L272">				return;</span>
+			}
+<span class="nc bnc" id="L274" title="All 4 branches missed.">			if ((exAction != currentPlayerMainActions || exqAction != this.currentPlayerQuickActions)</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">					&amp;&amp; this.getCurrentPlayer() == prevP) {</span>
+<span class="nc" id="L276">				this.informPlayer(this.getCurrentPlayer());</span>
+			}
+<span class="nc bnc" id="L278" title="All 4 branches missed.">			if (this.getCurrentPlayer() == prevP &amp;&amp; this.roundNumber == precRound) {</span>
+<span class="nc" id="L279">				c.setup();</span>
+<span class="nc" id="L280">				this.proxy.sendAction(</span>
+<span class="nc" id="L281">						new UnserializedVectorPacket&lt;Action&gt;(c, action, this.getCurrentPlayer().getUserID(), 0));</span>
+<span class="nc" id="L282">			} </span>
+<span class="nc bnc" id="L283" title="All 4 branches missed.">			else if (this.roundNumber == precRound || !this.hasMarket)</span>
+<span class="nc" id="L284">				this.beginTurn();</span>
+<span class="nc" id="L285">		} catch (CannotPerformActionException e) {</span>
+<span class="nc" id="L286">			logger.log(e, &quot;There has been an error executing the requested action&quot;);</span>
+<span class="nc" id="L287">			ErrorAction&lt;MatchCD4&gt; a = new ErrorAction&lt;&gt;(this);</span>
+<span class="nc" id="L288">			a.setup(e.getMessage());</span>
+<span class="nc" id="L289">			this.proxy.sendAction(</span>
+<span class="nc" id="L290">					new UnserializedVectorPacket&lt;Action&gt;(a, action, this.getCurrentPlayer().getUserID(), 0));</span>
+<span class="nc" id="L291">		} catch (CannotSetupActionException e) {</span>
+<span class="nc" id="L292">			logger.log(e, &quot;Couldn't setup the action&quot;);</span>
+<span class="nc" id="L293">			ErrorAction&lt;MatchCD4&gt; a = new ErrorAction&lt;&gt;(this);</span>
+<span class="nc" id="L294">			a.setup(e.getMessage());</span>
+<span class="nc" id="L295">			this.proxy.sendAction(</span>
+<span class="nc" id="L296">					new UnserializedVectorPacket&lt;Action&gt;(a, action, this.getCurrentPlayer().getUserID(), 0));</span>
+		}
+
+<span class="nc" id="L299">	}</span>
+
+	/**
+	 * Begin of a player's turn:&lt;br&gt;
+	 * Resets counters of available actions, gives the current player a
+	 * {@link PoliticsCard} if the relative deck is not empty, broadcasts the
+	 * game status to all players of the match
+	 */
+	@Override
+	public synchronized void beginTurn() {
+<span class="pc bpc" id="L309" title="1 of 2 branches missed.">		if(this.roundNumber==-1)</span>
+		{
+<span class="nc" id="L311">			this.roundNumber = 0;</span>
+<span class="nc" id="L312">			this.running = true;</span>
+		}
+<span class="fc" id="L314">		this.currentPlayerMainActions = 1;</span>
+<span class="fc" id="L315">		this.currentPlayerQuickActions = 1;</span>
+		try {
+<span class="fc" id="L317">			this.getCurrentPlayer().addPoliticsCard(this.getBoard().getPoliticsDeck().drawCard());</span>
+<span class="pc" id="L318">		} catch (NoCardsException e) {</span>
+<span class="nc" id="L319">			logger.log(e, &quot;The player could not draw any card because the deck is empty&quot;);</span>
+<span class="nc" id="L320">		} finally {</span>
+<span class="pc" id="L321">			this.broadCastGameStatus();</span>
+<span class="nc" id="L322">		}</span>
+<span class="pc bpc" id="L323" title="1 of 2 branches missed.">		if(!running)</span>
+<span class="nc" id="L324">			return;</span>
+<span class="fc" id="L325">		Action s = new ChooseActionTypeAction&lt;MatchCD4&gt;(this);</span>
+		try {
+<span class="fc" id="L327">			s.setup();</span>
+<span class="pc" id="L328">		} catch (Exception e) {</span>
+<span class="nc" id="L329">			logger.log(e, &quot;There was a problem. No action can be setup&quot;);</span>
+		} // This exception will never be thrown cause at least one Action can
+			// always be performed
+<span class="fc" id="L332">		this.proxy</span>
+<span class="fc" id="L333">				.sendAction(new UnserializedVectorPacket&lt;Action&gt;(s, &quot;Action&quot;, this.getCurrentPlayer().getUserID(), 0));</span>
+<span class="fc" id="L334">	}</span>
+
+	/**
+	 * Broadcasts the game status to all players of the match
+	 * 
+	 * @see {@link DisplayInteraction}
+	 */
+	public void broadCastGameStatus() {
+<span class="fc bfc" id="L342" title="All 2 branches covered.">		for (PlayerCD4 p : players) {</span>
+<span class="fc bfc" id="L343" title="All 2 branches covered.">			if (p.isActive()) {</span>
+<span class="fc" id="L344">				DisplayAction&lt;GameStatus&gt; a = new DisplayAction&lt;&gt;(this);</span>
+<span class="fc" id="L345">				a.setup(new DisplayInteraction&lt;GameStatus&gt;(new GameStatus(this, p)));</span>
+<span class="fc" id="L346">				this.proxy.sendAction(new UnserializedVectorPacket&lt;Action&gt;(a, &quot;GameStatus&quot;, p.getUserID(), 0));</span>
+			}
+		}
+<span class="fc" id="L349">	}</span>
+	
+
+	/**
+	 * Ends the turn of the current player and sets the next player to current
+	 */
+	@Override
+	public synchronized void endTurn() throws CannotPassException {
+
+<span class="pc bpc" id="L358" title="1 of 4 branches missed.">		if (!this.canPass() &amp;&amp; this.getCurrentPlayer().isActive())</span>
+<span class="fc" id="L359">			throw new CannotPassException();</span>
+		
+<span class="fc bfc" id="L361" title="All 2 branches covered.">		if (this.hasWon()) {</span>
+<span class="fc" id="L362">			this.someoneWon = true;</span>
+			// Setting the current player (temp winner) inactive for the last round
+<span class="fc" id="L364">			this.getCurrentPlayer().setExcluded(true);</span>
+		}
+		
+		// Count all active players
+<span class="fc" id="L368">		int activeCounter = 0;</span>
+<span class="fc bfc" id="L369" title="All 2 branches covered.">		for(int i=0;i&lt;players.size();i++){</span>
+<span class="fc bfc" id="L370" title="All 2 branches covered.">			if(players.get(i).isActive()){</span>
+<span class="fc" id="L371">				activeCounter ++;</span>
+			}
+<span class="fc bfc" id="L373" title="All 2 branches covered.">			if(activeCounter &gt; 1)</span>
+<span class="fc" id="L374">				break;</span>
+		}
+		// Zero or only one active player is left: end the game immediatly
+<span class="fc bfc" id="L377" title="All 2 branches covered.">		if(activeCounter &lt;2)</span>
+<span class="fc" id="L378">			this.endGame();</span>
+		
+		try {
+<span class="fc" id="L381">			PlayerCD4 nextP = this.nextPlayer();</span>
+<span class="fc bfc" id="L382" title="All 2 branches covered.">			if (players.indexOf(nextP) &lt;= this.currentPlayerIndex) {</span>
+				// NB: endRound() calls Market if needed.
+<span class="fc" id="L384">				this.endRound();</span>
+			}
+<span class="fc" id="L386">			this.setCurrentPlayer(nextP);</span>
+<span class="fc" id="L387">		} catch (EndGameException e) {</span>
+<span class="fc" id="L388">			this.endGame();</span>
+		}
+<span class="fc" id="L390">	}</span>
+
+	/**
+	 * Return the next active and not excluded player
+	 * (may be the same as in the previous turn)
+	 * 
+	 * @return {@link PlayerCD4} the next player
+	 * @throws EndGameException
+	 *             if only no players are still active and not excluded
+	 */
+	@Override
+	public PlayerCD4 nextPlayer() throws EndGameException {
+		PlayerCD4 p;
+<span class="fc bfc" id="L403" title="All 2 branches covered.">		for (int index = this.currentPlayerIndex + 1; index != this.currentPlayerIndex; index = (index + 1)</span>
+<span class="fc" id="L404">				% this.players.size()) {</span>
+<span class="fc" id="L405">			p = this.players.get(index % this.players.size());</span>
+<span class="fc bfc" id="L406" title="All 4 branches covered.">			if (p.isActive() &amp;&amp; !p.isExcluded())</span>
+<span class="fc" id="L407">				return p;</span>
+		}
+<span class="pc bpc" id="L409" title="1 of 4 branches missed.">		if(this.getCurrentPlayer().isActive() &amp;&amp; !this.getCurrentPlayer().isExcluded())</span>
+<span class="fc" id="L410">			return this.getCurrentPlayer();</span>
+<span class="fc" id="L411">		throw new EndGameException();</span>
+
+	}
+
+	/**
+	 * Check if the current player can pass
+	 * 
+	 * @return boolean
+	 */
+	@Override
+	public boolean canPass() {
+<span class="fc bfc" id="L422" title="All 2 branches covered.">		return this.getRemainingMainActions() &lt; 1;</span>
+	}
+
+	/**
+	 * Checks if the current player has won
+	 */
+	@Override
+	public boolean hasWon() {
+<span class="fc bfc" id="L430" title="All 2 branches covered.">		return this.getCurrentPlayer().getPlayerEmporiums().size() &gt;=  this.numberOfEmporiumsToWin;</span>
+	}
+
+	/**
+	 * Gives the final points (according to game's rules) and determines the winner
+	 * @return List&lt;{@link PlayerCD4}&gt; : the players' list sorted by victory points
+	 * @see #giveFinalPointsNobility()
+	 * @see #giveFinalPointsPermit()
+	 */
+	public List&lt;PlayerCD4&gt; whoWon() {
+		
+<span class="fc bfc" id="L441" title="All 2 branches covered.">		if(!this.finalScore){</span>
+<span class="fc" id="L442">			this.giveFinalPointsNobility();</span>
+<span class="fc" id="L443">			this.giveFinalPointsPermit();</span>
+		}
+		
+<span class="fc" id="L446">		List&lt;PlayerCD4&gt; scoreBoard = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L447">		scoreBoard.addAll(this.getPlayers().stream().filter(p -&gt; p.isActive()).collect(Collectors.toList()));</span>
+		
+<span class="fc" id="L449">		this.sortByVictoryPoints(scoreBoard);</span>
+<span class="fc bfc" id="L450" title="All 2 branches covered.">		if(scoreBoard.size()&gt;1){</span>
+			// Checks for ex aequo
+<span class="fc" id="L452">			PlayerCD4 p1 = scoreBoard.get(0);</span>
+<span class="fc" id="L453">			PlayerCD4 p2 = scoreBoard.get(1);</span>
+<span class="fc bfc" id="L454" title="All 2 branches covered.">			if(p1.getPocket().getVictoryPoints().getSupply() ==  p2.getPocket().getVictoryPoints().getSupply()){</span>
+				/*
+				 * Ex Aequo logic:
+				 * 1. Sum assistants and politics cards
+				 * 2. If still in ex aequo randomly choose the winner
+				 */
+<span class="fc" id="L460">				int extraBonus1 = p1.getPocket().getAssistants().getSupply() + p1.getPoliticsCards().size();</span>
+<span class="fc" id="L461">				int extraBonus2 = p2.getPocket().getAssistants().getSupply() + p2.getPoliticsCards().size();</span>
+<span class="pc bpc" id="L462" title="1 of 2 branches missed.">				if(extraBonus1 == extraBonus2)</span>
+<span class="nc bnc" id="L463" title="All 2 branches missed.">					(this.random.nextBoolean() ? p1 : p2 ).getPocket().addPocketable(new VictoryPoint(1));</span>
+				else
+<span class="fc bfc" id="L465" title="All 2 branches covered.">					((extraBonus1 &gt; extraBonus2) ? p1 : p2 ).getPocket().addPocketable(new VictoryPoint(1));</span>
+<span class="fc" id="L466">				this.sortByVictoryPoints(scoreBoard);</span>
+			}
+		}
+		
+<span class="fc" id="L470">		List&lt;PlayerCD4&gt; inactiveOnes = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L471" title="All 2 branches covered.">		inactiveOnes.addAll(this.getPlayers().stream().filter(p -&gt; !p.isActive()).collect(Collectors.toList()));</span>
+<span class="fc" id="L472">		this.sortByVictoryPoints(inactiveOnes);</span>
+<span class="fc" id="L473">		scoreBoard.addAll(inactiveOnes);</span>
+<span class="fc" id="L474">		this.finalScore = true;</span>
+<span class="fc" id="L475">		return scoreBoard;	</span>
+	}
+
+	/**
+	 * Return the counter of rounds from the beginning of the match
+	 * 
+	 * @return int
+	 */
+	@Override
+	public int getRoundNumber() {
+<span class="fc" id="L485">		return this.roundNumber;</span>
+	}
+
+	@Override
+	public void endRound() throws EndGameException {
+		// Increments the counter of round's number
+<span class="fc" id="L491">		this.roundNumber++;</span>
+<span class="fc bfc" id="L492" title="All 2 branches covered.">		if (lastRound)</span>
+<span class="fc" id="L493">			throw new EndGameException();</span>
+		else {
+			{
+<span class="fc" id="L496">				boolean flag = this.lastRound;</span>
+<span class="fc" id="L497">				this.lastRound = this.someoneWon;</span>
+<span class="pc bpc" id="L498" title="1 of 4 branches missed.">				if(this.lastRound &amp;&amp; !flag)</span>
+				{
+<span class="fc" id="L500">					DisplayAction&lt;String&gt; change = new DisplayAction&lt;&gt;(this);</span>
+<span class="fc" id="L501">					change.setup(new DisplayInteraction&lt;String&gt;(&quot;Attention!The last round has just started&quot;));</span>
+<span class="fc" id="L502">					this.getPlayers().stream().filter(p -&gt; p.isActive()).forEach(p -&gt; this.proxy.sendAction(new UnserializedVectorPacket&lt;Action&gt;(change, &quot;Info&quot;, p.getUserID(), 0)));</span>
+				}	
+			}
+<span class="fc bfc" id="L505" title="All 2 branches covered.">			if (this.hasMarket)</span>
+<span class="fc" id="L506">				this.market.openMarket();</span>
+			else
+<span class="fc" id="L508">				this.beginTurn();</span>
+		}
+
+<span class="fc" id="L511">	}</span>
+
+	/**
+	 * Makes the players' order random
+	 * 
+	 * @param order
+	 *            List&lt;{@link PlayerCD4}&gt; the list of players to be shuffled
+	 */
+	@Override
+	public void setOrder(List&lt;PlayerCD4&gt; order) {
+<span class="nc" id="L521">		Collections.shuffle(order, this.getRandom());</span>
+<span class="nc" id="L522">	}</span>
+
+	/**
+	 * Return the current player
+	 * 
+	 * @return {@link PlayerCD4} the current player
+	 */
+	@Override
+	public PlayerCD4 getCurrentPlayer() {
+<span class="fc" id="L531">		return this.players.get(currentPlayerIndex);</span>
+	}
+
+	private void setCurrentPlayer(PlayerCD4 player) {
+<span class="fc" id="L535">		this.currentPlayerIndex = this.getPlayers().indexOf(player);</span>
+<span class="fc" id="L536">	}</span>
+
+	/**
+	 * Method called when a game is finished. It sets the game as &quot;not running&quot;
+	 * and after that it broadcasts the game status to all the players.
+	 * 
+	 * @see #broadCastGameStatus()
+	 */
+	public void endGame() {
+<span class="fc" id="L545">		logger.log(&quot;The game is over.&quot;);</span>
+<span class="fc" id="L546">		this.running = false;</span>
+<span class="fc" id="L547">		this.broadCastGameStatus();</span>
+<span class="fc" id="L548">		System.out.println(&quot;We have a winner! GAME ENDED&quot;);</span>
+<span class="fc" id="L549">		logger.log(&quot;We have a winner! GAME ENDED&quot;);</span>
+<span class="fc" id="L550">		proxy.kill();</span>
+<span class="fc" id="L551">	}</span>
+
+	/**
+	 * Gets the random object for the match
+	 * @return {@link Random}
+	 */
+	public Random getRandom() {
+<span class="fc" id="L558">		return this.random;</span>
+	}
+
+	/**
+	 * Adds a {@link PlayerCD4} to the match's players list
+	 * 
+	 * @param player
+	 *            {@link PlayerCD4} the player to add
+	 */
+	@Override
+	public void addPlayer(PlayerCD4 player) {
+<span class="fc" id="L569">		this.players.add(player);</span>
+<span class="fc" id="L570">	}</span>
+
+	/**
+	 * Checks if there are no more action in the stack
+	 * @return boolean
+	 */
+	public boolean actionStackIsEmpty() {
+<span class="fc" id="L577">		return this.actionsStack.isEmpty();</span>
+	}
+
+	/**
+	 * Adds an action to the stack
+	 * @param a the {@link Action} to add
+	 */
+	public void pushAction(Action a) {
+<span class="fc" id="L585">		this.actionsStack.add(a);</span>
+<span class="fc" id="L586">	}</span>
+
+	/**
+	 * Gets an action from the stack
+	 * @throws NullPointerException if the stack is empty
+	 * @return the {@link Action} on top of the stack
+	 */
+	public Action popAction() {
+<span class="pc bpc" id="L594" title="1 of 2 branches missed.">		if (this.actionsStack.isEmpty())</span>
+<span class="nc" id="L595">			throw new NullPointerException(&quot;No Actions in the stack&quot;);</span>
+		else
+<span class="fc" id="L597">			return this.actionsStack.removeLast();</span>
+	}
+
+	/**
+	 * Gets the action stack
+	 * @return Deque&lt;{@link Action}&gt; the action stack
+	 */
+	public Deque&lt;Action&gt; getActionsStack() {
+<span class="fc" id="L605">		return actionsStack;</span>
+	}
+
+	/**
+	 * Sets the action stack
+	 * @param actionsStack Deque&lt;{@link Action}&gt; the action stack
+	 */
+	public void setActionsStack(Deque&lt;Action&gt; actionsStack) {
+<span class="nc" id="L613">		this.actionsStack = actionsStack;</span>
+<span class="nc" id="L614">	}</span>
+
+	@Override
+	public List&lt;Action&gt; getAvailableActions() {
+<span class="fc" id="L618">		List&lt;Action&gt; temp = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L619" title="1 of 2 branches missed.">		if (this.currentPlayerMainActions &gt; 0)</span>
+<span class="fc" id="L620">			temp.add(new ChooseMainActionAction(this));</span>
+<span class="pc bpc" id="L621" title="1 of 2 branches missed.">		if (this.currentPlayerQuickActions &gt; 0)</span>
+<span class="fc" id="L622">			temp.add(new ChooseQuickActionAction(this));</span>
+<span class="pc bpc" id="L623" title="1 of 2 branches missed.">		if (this.currentPlayerMainActions &lt; 1)</span>
+<span class="nc" id="L624">			temp.add(new PassAction&lt;MatchCD4&gt;(this));</span>
+<span class="fc" id="L625">		return temp;</span>
+	}
+
+	@Override
+	public Action getStartingAction() {
+<span class="fc" id="L630">		return new ChooseActionTypeAction&lt;MatchCD4&gt;(this);</span>
+	}
+
+	@Override
+	public GameLogger getLogger() {
+<span class="fc" id="L635">		return this.logger;</span>
+	}
+
+	/**
+	 * @return the market if exists, NULL if not
+	 */
+	public Market getMarket() {
+<span class="fc" id="L642">		return market;</span>
+	}
+
+	@Override
+	public boolean isRunning() {
+<span class="fc" id="L647">		return running;</span>
+	}
+
+	@Override
+	public synchronized Serializable getStatus(int id) throws ElementNotFoundException {
+<span class="nc" id="L652">		PlayerCD4 requestingPlayer = null;</span>
+<span class="nc bnc" id="L653" title="All 2 branches missed.">		for (PlayerCD4 p : this.getPlayers())</span>
+<span class="nc bnc" id="L654" title="All 2 branches missed.">			if (p.getUserID() == id) {</span>
+<span class="nc" id="L655">				requestingPlayer = p;</span>
+<span class="nc" id="L656">				break;</span>
+			}
+<span class="nc bnc" id="L658" title="All 2 branches missed.">		if (requestingPlayer == null)</span>
+<span class="nc" id="L659">			throw new ElementNotFoundException();</span>
+<span class="nc" id="L660">		return new GameStatus(this, requestingPlayer);</span>
+	}
+	
+	/**
+	 * Computes and gives the finals Victory Points (VP) related to the Nobility Track (NP)&lt;br&gt;
+	 * According to game's rules:&lt;br&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;The player with more NP earns 5 VP&lt;/li&gt;
+	 * &lt;li&gt;The player closest to him earns 2 VP&lt;/li&gt;
+	 * &lt;li&gt;If more players are tied for the first NP place, they all wins 5 VP and no one earns 2 VP&lt;/li&gt;
+	 * &lt;li&gt;If more players are tied for the second NP place, they all earn 2 VP&lt;/li&gt;
+	 * &lt;/ul&gt;
+	 */
+	private void giveFinalPointsNobility(){
+<span class="fc" id="L674">		List&lt;PlayerCD4&gt; temp = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L675">		temp.addAll(this.getPlayers());</span>
+		
+<span class="fc" id="L677">		Collections.sort(temp ,new Comparator&lt;PlayerCD4&gt;() {</span>
+			@Override
+			public int compare(PlayerCD4 o1, PlayerCD4 o2) {
+<span class="fc" id="L680">				int n1 = o1.getPocket().getNobilityRank().getSupply();</span>
+<span class="fc" id="L681">				int n2 = o2.getPocket().getNobilityRank().getSupply();</span>
+<span class="fc bfc" id="L682" title="All 2 branches covered.">				if(n1==n2)</span>
+<span class="fc" id="L683">					return 0;</span>
+<span class="fc bfc" id="L684" title="All 2 branches covered.">				return ( n1 &lt; n2 ) ? -1 : 1;</span>
+			}
+<span class="fc" id="L686">		}.reversed());</span>
+
+		// two greatest values
+<span class="fc" id="L689">		int max1=temp.get(0).getPocket().getNobilityRank().getSupply();</span>
+<span class="fc" id="L690">		int max2=-1;</span>
+<span class="pc bfc" id="L691" title="All 2 branches covered.">		for(int i=1;i&lt;temp .size();i++){</span>
+<span class="fc" id="L692">			int newN = temp .get(i).getPocket().getNobilityRank().getSupply();</span>
+<span class="fc bfc" id="L693" title="All 2 branches covered.">			if( newN != max1)</span>
+<span class="fc" id="L694">				max2 = newN;</span>
+			else
+				break;
+<span class="pc bpc" id="L697" title="1 of 2 branches missed.">			if(max2!=-1)</span>
+<span class="fc" id="L698">				break;</span>
+		}
+
+<span class="fc bfc" id="L701" title="All 2 branches covered.">		for(int i=0; i&lt;temp.size();i++){</span>
+<span class="fc" id="L702">			PlayerCD4 t = temp.get(i);</span>
+<span class="fc" id="L703">			int n = t.getPocket().getNobilityRank().getSupply();</span>
+<span class="fc bfc" id="L704" title="All 2 branches covered.">			if(n==max1)</span>
+<span class="fc" id="L705">				t.getPocket().addPocketable(new VictoryPoint(5));</span>
+<span class="fc bfc" id="L706" title="All 2 branches covered.">			else if(n==max2)</span>
+<span class="fc" id="L707">				t.getPocket().addPocketable(new VictoryPoint(2));</span>
+		}
+<span class="fc" id="L709">	}</span>
+	
+	/**
+	 * Computes and gives the finals Victory Points (VP) related to Permit Cards (PC)&lt;br&gt;
+	 * According to game's rules:&lt;br&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;The player with more PC earns 3 VP&lt;/li&gt;
+	 * &lt;li&gt;If more players are tied for the first PC place, they all wins 3 VP&lt;/li&gt;
+	 * &lt;/ul&gt;
+	 */
+	private void giveFinalPointsPermit(){
+<span class="fc" id="L720">		List&lt;PlayerCD4&gt; temp = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L721">		temp.addAll(this.getPlayers());</span>
+<span class="fc" id="L722">		Collections.sort(temp, new Comparator&lt;PlayerCD4&gt;() {</span>
+			@Override
+			public int compare(PlayerCD4 o1, PlayerCD4 o2) {
+<span class="fc" id="L725">				int n1 = o1.getPermitsToBeUsed().size();</span>
+<span class="fc" id="L726">				int n2 = o2.getPermitsToBeUsed().size();</span>
+<span class="fc bfc" id="L727" title="All 2 branches covered.">				if(n1==n2)</span>
+<span class="fc" id="L728">					return 0;</span>
+<span class="pc bpc" id="L729" title="1 of 2 branches missed.">				return ( n1 &lt; n2 ) ? -1 : 1;	</span>
+			}
+<span class="fc" id="L731">		}.reversed());</span>
+		
+<span class="fc" id="L733">		int maxNPermit = temp.get(0).getPermitsToBeUsed().size();</span>
+		
+<span class="fc" id="L735">		temp.forEach(new Consumer&lt;PlayerCD4&gt;(){</span>
+			@Override
+			public void accept(PlayerCD4 t) {
+<span class="fc" id="L738">				int n = t.getPermitsToBeUsed().size();</span>
+<span class="fc bfc" id="L739" title="All 2 branches covered.">				if(n==maxNPermit)</span>
+<span class="fc" id="L740">					t.getPocket().addPocketable(new VictoryPoint(3));</span>
+<span class="fc" id="L741">			}</span>
+		});
+<span class="fc" id="L743">	}</span>
+
+	/**
+	 * Checks if the current round is the last
+	 * @return boolean
+	 */
+	public boolean isLastRound() {
+<span class="fc" id="L750">		return lastRound;</span>
+	}
+
+	/**
+	 * Checks if the match has a market
+	 * @return boolean
+	 */
+	public boolean hasMarket() {
+<span class="fc" id="L758">		return hasMarket;</span>
+	}
+	
+	private void sortByVictoryPoints(List&lt;PlayerCD4&gt; toSort){
+<span class="fc" id="L762">		Collections.sort(toSort, new Comparator&lt;PlayerCD4&gt;() {</span>
+			@Override
+			public int compare(PlayerCD4 o1, PlayerCD4 o2) {
+<span class="fc" id="L765">				int n1 = o1.getPocket().getVictoryPoints().getSupply();</span>
+<span class="fc" id="L766">				int n2 = o2.getPocket().getVictoryPoints().getSupply();</span>
+<span class="fc bfc" id="L767" title="All 2 branches covered.">				if(n1==n2)</span>
+<span class="fc" id="L768">					return 0;</span>
+<span class="fc bfc" id="L769" title="All 2 branches covered.">				return ( n1 &lt; n2 ) ? -1 : 1;	</span>
+			}
+<span class="fc" id="L771">		}.reversed());</span>
+<span class="fc" id="L772">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

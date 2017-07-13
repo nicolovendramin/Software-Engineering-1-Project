@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ActionFabric.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.actions</a> &gt; <span class="el_source">ActionFabric.java</span></div><h1>ActionFabric.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.actions;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import it.polimi.ingsw.cg25.gamegenerics.ActionBasedGame;
+import it.polimi.ingsw.cg25.model.MatchCD4;
+import it.polimi.ingsw.cg25.model.trade.Market;
+/**
+ * 
+ * @author nicolo
+ *
+ */
+public class ActionFabric {
+	/**
+	 * The model used by actions
+	 */
+	private final ActionBasedGame model;
+	
+	/**
+	 * The constructor needs an ActionBasedModel.
+	 * @param model. 
+	 * @throws IllegalArgumentException if model is null
+	 */
+<span class="fc" id="L25">	public ActionFabric(ActionBasedGame model){</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">		if(model==null)</span>
+<span class="fc" id="L27">			throw new IllegalArgumentException();</span>
+<span class="fc" id="L28">		this.model = model;</span>
+<span class="fc" id="L29">	}</span>
+	
+	/**
+	 * This method is meant to return an Action given its String representation
+	 * @param a the string representation of the action that we want to obtain
+	 * @return the Action corresponding to the input string
+	 */
+	public Action produce(String a){
+<span class="fc bfc" id="L37" title="All 2 branches covered.">		if(a == null)</span>
+<span class="fc" id="L38">			throw new IllegalArgumentException(&quot;Need to specify a non-null string&quot;);</span>
+<span class="fc" id="L39">		List&lt;Action&gt; ac = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L40">		ac.add(new ChooseActionTypeAction&lt;&gt;(model));</span>
+<span class="fc" id="L41">		ac.add(new ErrorAction&lt;&gt;(model));</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">		if(model instanceof MatchCD4)</span>
+		{
+<span class="fc" id="L44">			MatchCD4 ma = (MatchCD4)model;</span>
+<span class="fc" id="L45">			ac.add(new PassAction&lt;MatchCD4&gt;(ma));</span>
+<span class="fc" id="L46">			ac.addAll(MainAction.getMainActions(ma));</span>
+<span class="fc" id="L47">			ac.addAll(QuickAction.getQuickActions(ma));</span>
+<span class="fc" id="L48">			ac.add(new ChooseQuickActionAction(ma));</span>
+<span class="fc" id="L49">			ac.add(new ChooseMainActionAction(ma));</span>
+<span class="fc" id="L50">			ac.add(new ReusePermitBonusAction(ma));</span>
+<span class="fc" id="L51">			ac.add(new PermitCardBonusAction(ma));</span>
+<span class="fc" id="L52">			ac.add(new CityBonusAction(ma));</span>
+		}
+<span class="fc bfc" id="L54" title="All 2 branches covered.">		if( model instanceof Market)</span>
+		{
+<span class="fc" id="L56">			Market tr = (Market)model;</span>
+<span class="fc" id="L57">			ac.add(new BuyingAction(tr));</span>
+<span class="fc" id="L58">			ac.add(new SellPermit(tr));</span>
+<span class="fc" id="L59">			ac.add(new SellPolitics(tr));</span>
+<span class="fc" id="L60">			ac.add(new SellAssistant(tr));</span>
+<span class="fc" id="L61">			ac.add(new PassAction&lt;Market&gt;(tr));</span>
+		}
+<span class="fc bfc" id="L63" title="All 2 branches covered.">		for(Action action: ac)</span>
+		{
+<span class="fc bfc" id="L65" title="All 2 branches covered.">			if(action.toString().equals(a)) </span>
+<span class="fc" id="L66">				return action;</span>
+		}
+<span class="fc" id="L68">		throw new IllegalArgumentException(&quot;The string does not correspond to a known action!&quot;);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

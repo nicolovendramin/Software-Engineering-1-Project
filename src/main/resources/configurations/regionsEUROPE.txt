@@ -1,0 +1,56 @@
+#The first line specifies the number of regions
+#The following lines are one region followed by all its permit cards
+#The sintax of the region's line is:
+#type of region | number of faced up permits | the name of the cities | bonuses associated to that region
+numberOfRegions,3;
+Sea|2|Paris,Copenaghen,Kiev,Zagreb,Helsinki|VictoryPointBonus,5;
+numberOfPermits,15;
+Zagreb,Helsinki|VictoryPointBonus,3|AssistantBonus,1;
+Paris,Kiev|CoinBonus,3|DrawPoliticsCardBonus,1;
+Kiev,Copenaghen|VictoryPointBonus,3|CoinBonus,3;
+Paris|VictoryPointBonus,4|CoinBonus,3;
+Kiev|DrawPoliticsCardBonus,3|AssistantBonus,1;
+Copenaghen,Zagreb,Helsinki|DrawPoliticsCardBonus,1|NobilityPointBonus,1;
+Zagreb|VictoryPointBonus,7;
+Paris,Kiev|AssistantBonus,2;
+Kiev,Copenaghen,Zagreb|AssistantBonus,1|VictoryPointBonus,1;
+Paris,Kiev,Helsinki|CoinBonus,3;
+Paris,Zagreb,Helsinki|CoinBonus,1|VictoryPointBonus,2;
+Paris,Helsinki|NobilityPointBonus,2;
+Copenaghen,Zagreb|VictoryPointBonus,3|AssistantBonus,1;
+Helsinki|MainActionBonus,1|CoinBonus,2;
+Copenaghen|AssistantBonus,2|CoinBonus,3;
+Hill|2|London,Oslo,Rome,Berlin,Stockholm|VictoryPointBonus,5;
+numberOfPermits,15;
+Oslo,Berlin,Stockholm|DrawPoliticsCardBonus,2;
+London,Berlin|AssistantBonus,2|CoinBonus,1;
+London,Rome,Berlin|CoinBonus,2|VictoryPointBonus,1;
+Rome|AssistantBonus,2|NobilityPointBonus,1|VictoryPointBonus,2;
+London|DrawPoliticsCardBonus,2|CoinBonus,4;
+Rome,Stockholm,Oslo|DrawPoliticsCardBonus,1|AssistantBonus,1;
+Berlin|MainActionBonus,1|VictoryPointBonus,2;
+Stockholm,Oslo|VictoryPointBonus,5;
+London,Rome|CoinBonus,5;
+Oslo|DrawPoliticsCardBonus,2|AssistantBonus,2;
+Stockholm|AssistantBonus,4;
+Berlin,Oslo|DrawPoliticsCardBonus,2|NobilityPointBonus,1;
+Stockholm,Rome|AssistantBonus,3;
+London,Rome,Stockholm|CoinBonus,1|NobilityPointBonus,1;
+London,Berlin,Oslo|NobilityPointBonus,1|AssistantBonus,1;
+Mountain|2|Madrid,Wien,Dublin,Athens,Nicosia|VictoryPointBonus,5;
+numberOfPermits,15;
+Nicosia,Wien|MainActionBonus,1;
+Nicosia|VictoryPointBonus,5|NobilityPointBonus,1;
+Athens,Madrid|DrawPoliticsCardBonus,2|NobilityPointBonus,1;
+Madrid,Dublin,Nicosia|AssistantBonus,1|CoinBonus,1;
+Wien|CoinBonus,7;
+Madrid,Wien,Athens|DrawPoliticsCardBonus,1|VictoryPointBonus,1;
+Dublin|CoinBonus,1|AssistantBonus,3;
+Athens|DrawPoliticsCardBonus,3|NobilityPointBonus,1;
+Madrid,Dublin,Athens|DrawPoliticsCardBonus,1|CoinBonus,1;
+Madrid|DrawPoliticsCardBonus,4;
+Nicosia,Dublin|DrawPoliticsCardBonus,3;
+Wien,Athens|VictoryPointBonus,2|DrawPoliticsCardBonus,2;
+Nicosia,Wien,Athens|NobilityPointBonus,1|VictoryPointBonus,1;
+Dublin,Nicosia,Wien|VictoryPointBonus,3;
+Madrid,Dublin|DrawPoliticsCardBonus,1|AssistantBonus,2;

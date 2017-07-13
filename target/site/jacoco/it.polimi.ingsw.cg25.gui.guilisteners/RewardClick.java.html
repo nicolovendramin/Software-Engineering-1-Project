@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RewardClick.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.gui.guilisteners</a> &gt; <span class="el_source">RewardClick.java</span></div><h1>RewardClick.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.gui.guilisteners;
+
+import java.awt.Cursor;
+import java.awt.Font;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
+import it.polimi.ingsw.cg25.gui.CardDisplayer;
+import it.polimi.ingsw.cg25.gui.KingRewardPanel;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+public class RewardClick implements MouseListener {
+
+	/**
+	 * A reference to the king reward panel
+	 */
+	private final KingRewardPanel krp;
+	/**
+	 * The font to be used for any writing
+	 */
+	private final Font font;
+	
+	/**
+	 * RewardClick listener class constructor
+	 * @param krp the king reward panel to link to this listener
+	 * @param font the font used all over this gui
+	 */
+<span class="nc" id="L32">	public RewardClick(KingRewardPanel krp, Font font) {</span>
+<span class="nc" id="L33">		this.krp = krp;</span>
+<span class="nc" id="L34">		this.font = font;</span>
+<span class="nc" id="L35">	}</span>
+	
+	@Override
+	public void mouseClicked(MouseEvent arg0) {
+<span class="nc" id="L39">		new CardDisplayer(font, krp.getRealBonuses());</span>
+<span class="nc" id="L40">	}</span>
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+<span class="nc" id="L44">		krp.setCursor(new Cursor(Cursor.HAND_CURSOR));</span>
+<span class="nc" id="L45">	}</span>
+
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+<span class="nc" id="L49">		krp.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));</span>
+<span class="nc" id="L50">	}</span>
+
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		//Do nothing
+
+<span class="nc" id="L56">	}</span>
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		//Do nothing
+<span class="nc" id="L61">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

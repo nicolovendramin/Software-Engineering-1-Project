@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SocketView.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.views</a> &gt; <span class="el_source">SocketView.java</span></div><h1>SocketView.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.views;
+
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+
+import it.polimi.ingsw.cg25.actions.Interaction;
+import it.polimi.ingsw.cg25.communication.Packet;
+import it.polimi.ingsw.cg25.communication.VectorPacket;
+import it.polimi.ingsw.cg25.observer.Observable;
+import it.polimi.ingsw.cg25.observer.Observer;
+/**
+ * 
+ * @author nicolo
+ *
+ * @param &lt;T&gt; the type of packets that this view sends to its observers
+ * @param &lt;E&gt; the tupe of packets that this view observes for
+ */
+public class SocketView&lt;T extends Packet&lt;Interaction&gt;,E extends Packet&lt;Interaction&gt;&gt; extends Observable&lt;T&gt; implements Observer&lt;E&gt;{
+
+	/**
+	 * The thread that listens on the socket for this view
+	 */
+	private SocketInputThread&lt;T,E&gt; input;
+	/**
+	 * The socketOutput stream on which this view writes the messages for its twin
+	 */
+	private ObjectOutputStream socketOut;
+	/**
+	 * The id of this view
+	 */
+	private final int myId;
+	/**
+	 * The state of the view. true = active
+	 */
+<span class="nc" id="L36">	private boolean active = true;</span>
+	/**
+	 * The communication socket used to exchange objects with the twin
+	 */
+	private final Socket socket;
+	
+	/**
+	 * Constructor which instantiate a socket view
+	 * @param socket the socket to be used for communication
+	 * @param id the id to assign to the view
+	 * @throws IOException 
+	 */
+<span class="nc" id="L48">	public SocketView(Socket socket,int id) throws IOException{</span>
+<span class="nc" id="L49">		this.socket = socket;</span>
+<span class="nc" id="L50">		this.myId = id;</span>
+<span class="nc" id="L51">	}</span>
+	
+	/**
+	 * Builds a SocketView starting from an existing one
+	 * @param socketView is the existring view to be reinstantiated
+	 * @param id is the new id to assign to the view
+	 */
+<span class="nc" id="L58">	public SocketView(SocketView&lt;T,E&gt; socketView,int id){</span>
+<span class="nc" id="L59">		this.myId = id;</span>
+<span class="nc" id="L60">		this.socket = socketView.socket;</span>
+<span class="nc" id="L61">	}</span>
+	
+
+	/**
+	 * Runs the input Thread assigning it a name to make debugging easier
+	 * @param inputThreadName is the name to be assigned to the inputThread
+	 */
+	public void run(String inputThreadName) {
+		try {
+<span class="nc" id="L70">			socketOut = new ObjectOutputStream(socket.getOutputStream());</span>
+<span class="nc" id="L71">			socketOut.flush();</span>
+<span class="nc" id="L72">		} catch (IOException e) {</span>
+<span class="nc" id="L73">			e.printStackTrace();</span>
+<span class="nc" id="L74">		}</span>
+<span class="nc" id="L75">		input = new SocketInputThread&lt;&gt;(socket,this,myId);</span>
+<span class="nc" id="L76">		Thread t = new Thread(input);</span>
+<span class="nc" id="L77">		t.setName(inputThreadName);</span>
+<span class="nc" id="L78">		t.start();</span>
+<span class="nc" id="L79">	}</span>
+
+
+	@Override
+	public void update() {
+<span class="nc" id="L84">		this.closeView();</span>
+<span class="nc" id="L85">	}</span>
+
+	/**
+	 * Stops the view. closes the socket
+	 */
+	public void stop() {
+		try {
+<span class="nc" id="L92">			socket.close();</span>
+<span class="nc" id="L93">		} catch (IOException e) {</span>
+			//If this exception is called is just becaus the connection has already been closed on the other side
+			//so we don't actually need to handle it.
+<span class="nc" id="L96">		}</span>
+<span class="nc" id="L97">	}</span>
+
+	/**
+	 * Closes the view, kills the input thread and close the socket
+	 */
+	public void closeView(){
+		//the update method
+		try {
+<span class="nc" id="L105">			socketOut.close();</span>
+<span class="nc" id="L106">		} catch (IOException e) {</span>
+			//this exception is thrown only if the game wass already closed on the server side, so basically if you are 
+			//trying to close an already-closed socket. I won't handle it because this is something that must happen sistematically
+<span class="nc" id="L109">		}</span>
+<span class="nc" id="L110">		this.stop();</span>
+<span class="nc" id="L111">		this.active = false;</span>
+<span class="nc" id="L112">		this.input.kill();</span>
+<span class="nc" id="L113">	}</span>
+	
+	@Override
+	public void update(E change) {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if(!this.active)</span>
+<span class="nc" id="L118">			return;</span>
+<span class="nc" id="L119">		Interaction interaction = null;</span>
+		try{
+			try{
+<span class="nc" id="L122">				interaction = change.getContent(myId);</span>
+<span class="nc" id="L123">			}catch(IllegalAccessException e){</span>
+<span class="nc" id="L124">				return;</span>
+<span class="nc" id="L125">			}</span>
+<span class="nc" id="L126">			socketOut.writeObject(new VectorPacket&lt;Interaction&gt;(interaction,change.getType(),this.myId,0));</span>
+<span class="nc" id="L127">			socketOut.flush();</span>
+<span class="nc" id="L128">		}catch(IOException e){</span>
+<span class="nc" id="L129">			this.closeView();	</span>
+		}
+		finally{
+<span class="nc bnc" id="L132" title="All 24 branches missed.">			if(interaction != null &amp;&amp; interaction.printOptions().startsWith(&quot;quit&quot;) &amp;&amp; &quot;Quit&quot;.equals(change.getType()))</span>
+<span class="nc" id="L133">				this.closeView();			</span>
+		}
+<span class="nc" id="L135">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

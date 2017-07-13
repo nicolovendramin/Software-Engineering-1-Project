@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DTORegion.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.model.dto</a> &gt; <span class="el_source">DTORegion.java</span></div><h1>DTORegion.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.model.dto;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import it.polimi.ingsw.cg25.exceptions.ElementNotFoundException;
+import it.polimi.ingsw.cg25.model.dashboard.topological.Region;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+public class DTORegion implements DTO {
+
+	/**
+	 * Serial number for serial communication
+	 */
+	private static final long serialVersionUID = -3176358769242539795L;
+	/**
+	 * The name of the region
+	 */
+	private final String name;
+	/**
+	 * The List of DTO cities of the DTO region
+	 */
+	private final List&lt;DTOCity&gt; cities;
+	/**
+	 * The List of faced up permits of the DTO region
+	 */
+	private final List&lt;DTOPermitCard&gt; faceUpPermits;
+	/**
+	 * The DTO council of the DTO region
+	 */
+	private final DTOCouncil council;
+	/**
+	 * The DTO reward card of the DTO region
+	 */
+	private final DTORewardCard bonusCard;
+	
+	/**
+	 * DTORegion class constructor
+	 * @param region the Region type object to be converted
+	 * @exception NullPointerException if region is null
+	 */
+<span class="fc" id="L46">	public DTORegion(Region region) {</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">		if(region == null)</span>
+<span class="fc" id="L48">			throw new NullPointerException(&quot;You can't create a DTORegion without a valid region&quot;);</span>
+		
+<span class="fc" id="L50">		this.name = region.getName();</span>
+<span class="fc" id="L51">		this.cities = DTOCity.convertAll(region.getCities());</span>
+<span class="fc" id="L52">		this.council = new DTOCouncil(region.getCouncil());</span>
+<span class="fc" id="L53">		this.faceUpPermits = DTOPermitCard.convertAll(region.getFaceUpPermits());</span>
+<span class="fc" id="L54">		this.bonusCard = new DTORewardCard(region.getBonusCard());</span>
+<span class="fc" id="L55">	}</span>
+
+	/**
+	 * This method allows to convert a List of Region type objects into
+	 * a List of DTORegion objects
+	 * @param regions the List of regions to be converted
+	 * @return the List of DTO converted regions 
+	 * @throws IllegalArgumentException if regions is null
+	 */
+	public static List&lt;DTORegion&gt; convertAll(List&lt;Region&gt; regions) {
+<span class="fc bfc" id="L65" title="All 2 branches covered.">		if (regions == null)</span>
+<span class="fc" id="L66">			throw new IllegalArgumentException(&quot;Null parameter is not allowed.&quot;);</span>
+<span class="fc" id="L67">		List&lt;DTORegion&gt; converted = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">		for(Region r : regions)</span>
+<span class="fc" id="L69">			converted.add(new DTORegion(r));</span>
+<span class="fc" id="L70">		return converted;</span>
+	}
+	
+	@Override
+	public int hashCode() {
+<span class="fc" id="L75">		final int prime = 31;</span>
+<span class="fc" id="L76">		int result = 1;</span>
+<span class="fc" id="L77">		result = prime * result + bonusCard.hashCode();</span>
+<span class="fc" id="L78">		result = prime * result + cities.hashCode();</span>
+<span class="fc" id="L79">		result = prime * result + council.hashCode();</span>
+<span class="fc" id="L80">		result = prime * result + faceUpPermits.hashCode();</span>
+<span class="fc" id="L81">		result = prime * result + name.hashCode();</span>
+<span class="fc" id="L82">		return result;</span>
+	}
+
+	@Override
+	public boolean equals(Object r) {
+<span class="fc bfc" id="L87" title="All 2 branches covered.">		if(r == null)</span>
+<span class="fc" id="L88">			return false;</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">		if(r.getClass() == Region.class) {</span>
+<span class="fc" id="L90">			Region reg = (Region)r;</span>
+			//Confronta il nome della regione, le città, le tessere permesso a faccia in su, il consiglio e la bonus card
+<span class="pc bpc" id="L92" title="1 of 4 branches missed.">			return this.name.equals(reg.getName()) &amp;&amp; this.cities.equals(reg.getCities()) &amp;&amp;</span>
+<span class="pc bpc" id="L93" title="2 of 4 branches missed.">					this.faceUpPermits.equals(reg.getFaceUpPermits()) &amp;&amp; this.council.equals(reg.getCouncil());</span>
+		}
+<span class="fc bfc" id="L95" title="All 2 branches covered.">		if(r.getClass() == DTORegion.class) {</span>
+<span class="fc" id="L96">			DTORegion reg = (DTORegion)r;</span>
+			//Confronta il nome della regione, le città, le tessere permesso a faccia in su, il consiglio e la bonus card
+<span class="pc bpc" id="L98" title="1 of 4 branches missed.">			return this.name.equals(reg.getName()) &amp;&amp; this.cities.equals(reg.getCities()) &amp;&amp;</span>
+<span class="pc bpc" id="L99" title="2 of 4 branches missed.">					this.faceUpPermits.equals(reg.getFaceUpPermits()) &amp;&amp; this.council.equals(reg.getCouncil());</span>
+		}
+<span class="fc" id="L101">		return false;</span>
+	}
+
+	/**
+	 * The method allows to find a non-DTO region in a List of regions
+	 * which is equal to this DTORegion object
+	 * @param candidates a List of Region type objects
+	 * @return a Region type object of the previous List
+	 * @throws ElementNotFoundException if the list of candidates does not contain
+	 * a region that can be mapped into this DTO region
+	 */
+	public Region decode(List&lt;Region&gt; candidates) throws ElementNotFoundException {
+<span class="fc bfc" id="L113" title="All 2 branches covered.">		for(Region r : candidates)</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">			if(this.equals(r))</span>
+<span class="fc" id="L115">				return r;</span>
+<span class="fc" id="L116">		throw new ElementNotFoundException();</span>
+	}
+	
+	/**
+	 * @return the name of the region
+	 */
+	public String getName() {
+<span class="fc" id="L123">		return name;</span>
+	}
+
+	/**
+	 * @return a List of DTOCities in the region
+	 */
+	public List&lt;DTOCity&gt; getCities() {
+<span class="fc" id="L130">		return cities;</span>
+	}
+
+	/**
+	 * @return the council of the region
+	 */
+	public DTOCouncil getCouncil() {
+<span class="fc" id="L137">		return council;</span>
+	}
+
+	/**
+	 * @return the List of faced up permits of the region
+	 */
+	public List&lt;DTOPermitCard&gt; getFaceUpPermits() {
+<span class="fc" id="L144">		return faceUpPermits;</span>
+	}
+
+	/**
+	 * @return the DTO reward card linked to the region
+	 */
+	public DTORewardCard getBonusCard() {
+<span class="fc" id="L151">		return bonusCard;</span>
+	}
+
+	@Override
+	public String toString() {
+<span class="fc" id="L156">		StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L157">		sb.append(&quot;Region: Name = &quot;);</span>
+<span class="fc" id="L158">		sb.append(name);</span>
+		
+<span class="fc" id="L160">		return sb.toString();</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

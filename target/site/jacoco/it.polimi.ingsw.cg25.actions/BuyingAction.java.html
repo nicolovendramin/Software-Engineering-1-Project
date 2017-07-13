@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>BuyingAction.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.actions</a> &gt; <span class="el_source">BuyingAction.java</span></div><h1>BuyingAction.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.actions;
+
+import java.util.List;
+
+import it.polimi.ingsw.cg25.exceptions.CannotPerformActionException;
+import it.polimi.ingsw.cg25.exceptions.CannotSetupActionException;
+import it.polimi.ingsw.cg25.exceptions.ElementNotFoundException;
+import it.polimi.ingsw.cg25.exceptions.NotEnoughCoinException;
+import it.polimi.ingsw.cg25.model.Coin;
+import it.polimi.ingsw.cg25.model.dto.dtoproduct.DTOProduct;
+import it.polimi.ingsw.cg25.model.dto.dtoproduct.DTOSellable;
+import it.polimi.ingsw.cg25.model.trade.Market;
+import it.polimi.ingsw.cg25.model.trade.Product;
+import it.polimi.ingsw.cg25.model.trade.Sellable;
+/**
+ * 
+ * @author nicolo
+ *
+ */
+public class BuyingAction extends MarketAction {
+
+	/**
+	 * The interaction for the choice of the products to buy
+	 */
+	private MultipleChoiceInteraction&lt;DTOProduct&lt;? extends DTOSellable&gt;&gt; productsToBeBought;
+	/**
+	 * The list of Product on which apply the decode function
+	 */
+	private List&lt;Product&lt;? extends Sellable&gt;&gt; candidates;
+	
+	/**
+	 * Just a constructor
+	 * @param model
+	 */
+	public BuyingAction(Market model) {
+<span class="fc" id="L36">		super(model);</span>
+<span class="fc" id="L37">	}</span>
+
+	@Override
+	public Action doAction() throws CannotPerformActionException {
+		try {
+<span class="fc" id="L42">			List&lt;Product&lt;? extends Sellable&gt;&gt; products = DTOProduct.decodeAll(productsToBeBought.getReply(),candidates);</span>
+<span class="fc" id="L43">			int sum = products.stream().mapToInt(p -&gt; p.getPrice()).sum();</span>
+			try{
+				// Tries to remove the price from the buyer
+<span class="fc" id="L46">				this.getModel().getCurrentPlayer().getPocket().subPocketable(new Coin(sum));</span>
+<span class="fc" id="L47">			}catch(NotEnoughCoinException e){</span>
+<span class="fc" id="L48">				throw new CannotPerformActionException(&quot;You don't have enough money to buy those products&quot;,e);</span>
+			}
+			// Gives the price to the seller
+<span class="fc" id="L51">			products.stream().forEach(p -&gt; p.getOwner().getPocket().addPocketable(new Coin(p.getPrice())));</span>
+			// Gives items to buyer
+<span class="fc" id="L53">			products.stream().forEach(p -&gt; p.achieveProduct(this.getModel().getCurrentPlayer()));</span>
+			// Removes bought products from available products
+<span class="fc" id="L55">			this.getModel().getProducts().removeAll(products);</span>
+<span class="pc" id="L56">		} catch (ElementNotFoundException e) {</span>
+<span class="nc" id="L57">			throw new CannotPerformActionException(&quot;Couldn't fin the product you are referring to.&quot;,e);</span>
+		}
+<span class="fc" id="L59">		return this.getModel().getStartingAction();</span>
+	}
+	
+	/**
+	 * The esplicit setup for the action
+	 * @param products are the available products on the market
+	 * @throws CannotSetupActionException if there are no available products on the market
+	 */
+	public void setup(List&lt;Product&lt;? extends Sellable&gt;&gt; products) throws CannotSetupActionException{
+<span class="fc bfc" id="L68" title="All 4 branches covered.">		if(products == null || products.size() == 0)</span>
+<span class="fc" id="L69">			throw new CannotSetupActionException(&quot;No products to sell in the market&quot;);</span>
+<span class="fc" id="L70">		candidates = products;</span>
+<span class="fc" id="L71">		this.productsToBeBought = new MultipleChoiceInteraction&lt;&gt;(&quot;Choose which products you would like to buy&quot;,DTOProduct.convertAll(products));</span>
+<span class="fc" id="L72">		this.setInteraction(productsToBeBought);</span>
+<span class="fc" id="L73">	}</span>
+	
+	@Override
+	public void setup() throws CannotSetupActionException{
+<span class="fc bfc" id="L77" title="All 2 branches covered.">		if(this.getInteractions().size()!=0)</span>
+<span class="fc" id="L78">			return;</span>
+<span class="fc" id="L79">		this.setup(this.getModel().getProducts());</span>
+<span class="fc" id="L80">	}</span>
+
+	@Override
+	public String toString(){
+<span class="fc" id="L84">		return &quot;Buy some of the products available on the market.&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PlayersLayeredPane.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.gui</a> &gt; <span class="el_source">PlayersLayeredPane.java</span></div><h1>PlayersLayeredPane.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.gui;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Image;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
+import javax.swing.border.Border;
+
+import it.polimi.ingsw.cg25.model.dto.DTOPlayerCD4;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+@SuppressWarnings(&quot;serial&quot;)
+public class PlayersLayeredPane extends JLayeredPane {
+
+	/**
+	 * The background image of the label
+	 */
+	private Image paperVector;
+	/**
+	 * The string representing player's statistics
+	 */
+	private String vectorString;
+	/**
+	 * JLabel with all the player's statistics
+	 */
+	private JLabel playerStat;
+	
+	/**
+	 * PlayerLabel class constructor
+	 * @param player the DTO player used to build the label
+	 * @param font the font to be used for any writing
+	 * @throws IOException if something goes wrong in loading resources
+	 */
+<span class="nc" id="L45">	public PlayersLayeredPane(DTOPlayerCD4 player, Font font, int yPos) throws IOException {</span>
+<span class="nc" id="L46">		loadResources();</span>
+		//Initialize the panel
+<span class="nc" id="L48">		this.setBounds(0, yPos, 220, 135);</span>
+<span class="nc" id="L49">		this.setOpaque(false);</span>
+<span class="nc" id="L50">		this.setLayout(null);</span>
+		
+		//Put a label inside the panel
+<span class="nc" id="L53">		playerStat = new JLabel();</span>
+<span class="nc" id="L54">		Image scaledVector = paperVector.getScaledInstance(this.getWidth(), this.getHeight(), Image.SCALE_SMOOTH);</span>
+<span class="nc" id="L55">		playerStat.setIcon(new ImageIcon(scaledVector));</span>
+<span class="nc" id="L56">		vectorString = createString(player);</span>
+<span class="nc" id="L57">		playerStat.setBounds(0, 0, this.getWidth(), this.getHeight());</span>
+<span class="nc" id="L58">		playerStat.setHorizontalTextPosition(JLabel.CENTER);</span>
+<span class="nc" id="L59">		playerStat.setVerticalTextPosition(JLabel.CENTER);</span>
+<span class="nc" id="L60">		playerStat.setText(vectorString);</span>
+<span class="nc" id="L61">		playerStat.setFont(new Font(font.getFontName(), Font.PLAIN, 15));</span>
+<span class="nc" id="L62">		playerStat.setForeground(Color.BLACK);</span>
+		//Add the label and set the layer level
+<span class="nc" id="L64">		this.add(playerStat);</span>
+<span class="nc" id="L65">		this.setLayer(playerStat, 1);</span>
+		
+		//Add the color box to the panel
+<span class="nc" id="L68">		JLabel color = new JLabel();</span>
+<span class="nc" id="L69">		color.setBounds(105, 114, 12, 12);</span>
+<span class="nc" id="L70">		color.setOpaque(true);</span>
+<span class="nc" id="L71">		color.setBackground(player.getPlayerColor());</span>
+<span class="nc" id="L72">		Border border = BorderFactory.createLineBorder(Color.BLACK, 1);</span>
+<span class="nc" id="L73">		color.setBorder(border);</span>
+<span class="nc" id="L74">		this.add(color);</span>
+<span class="nc" id="L75">		this.setLayer(color, 10);</span>
+<span class="nc" id="L76">	}</span>
+	
+	/**
+	 * This method loads digital resources for this layered panel
+	 * @throws IOException if something goes wrong while loading
+	 */
+	private void loadResources() throws IOException {
+<span class="nc" id="L83">		paperVector = ImageIO.read(new File(&quot;src/main/resources/paperVector.png&quot;));</span>
+<span class="nc" id="L84">	}</span>
+	
+	/**
+	 * This method creates a string with the whole player's statistics
+	 * @param player the DTO player used to create the string
+	 * @return the string just mentioned above
+	 */
+	private String createString(DTOPlayerCD4 player) {
+<span class="nc" id="L92">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L93">		sb.append(&quot;&lt;html&gt;&quot; + player.getName() + &quot;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L94">		sb.append(&quot;Victory Points: &quot; + player.getPocket().getVictoryPoints() + &quot;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L95">		sb.append(&quot;Nobility Points: &quot; + player.getPocket().getNobilityRank() + &quot;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L96">		sb.append(&quot;Coins: &quot; + player.getPocket().getCoins()+ &quot;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L97">		sb.append(&quot;Assistants: &quot; + player.getPocket().getAssistants() + &quot;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L98">		sb.append(&quot;Color:&lt;/html&gt;&quot;);</span>
+		
+<span class="nc" id="L100">		return sb.toString();</span>
+	}
+	
+	/**
+	 * Update the string linked to the player's label contained in this panel
+	 * @param player the DTO player used to build and update the string
+	 */
+	public void updateString(DTOPlayerCD4 player) {
+<span class="nc" id="L108">		playerStat.setText(createString(player));</span>
+<span class="nc" id="L109">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

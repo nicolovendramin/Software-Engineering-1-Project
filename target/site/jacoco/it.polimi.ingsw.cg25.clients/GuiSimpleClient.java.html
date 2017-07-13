@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GuiSimpleClient.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.clients</a> &gt; <span class="el_source">GuiSimpleClient.java</span></div><h1>GuiSimpleClient.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.clients;
+import it.polimi.ingsw.cg25.actions.DisplayInteraction;
+import java.io.IOException;
+import java.net.Socket;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
+import javax.swing.SwingUtilities;
+
+import it.polimi.ingsw.cg25.actions.Interaction;
+import it.polimi.ingsw.cg25.communication.VectorPacket;
+import it.polimi.ingsw.cg25.gui.CoFGui;
+import it.polimi.ingsw.cg25.gui.guilisteners.QuitAction;
+import it.polimi.ingsw.cg25.model.dto.GameStatus;
+import it.polimi.ingsw.cg25.observer.Observable;
+import it.polimi.ingsw.cg25.observer.Observer;
+import it.polimi.ingsw.cg25.servers.RMIServerInterface;
+import it.polimi.ingsw.cg25.views.RMIView;
+import it.polimi.ingsw.cg25.views.RMIViewRemote;
+import it.polimi.ingsw.cg25.views.SocketView;
+
+/**
+ * 
+ * @author Giovanni &lt;------
+ * @author Nicolo
+ *
+ */
+<span class="nc" id="L30">public class GuiSimpleClient extends Observable&lt;VectorPacket&lt;Interaction&gt;&gt; implements Observer&lt;VectorPacket&lt;Interaction&gt;&gt; {</span>
+
+	/**
+	 * The graphical interface from wich this client takes the inputs
+	 */
+	private CoFGui gui;
+	
+	/**
+	 * This code Just starts the gui, setting up the interface and asking the 
+	 * event dispatcher to start it. It terminates after that the interface has been loaded
+	 * and shown
+	 * @param is the args of the main method. No args are required nor used
+	 */
+	public static void main(String[] args) {
+		
+		//Creo un oggetto runnable e definisco al suo interno il metodo run()
+<span class="nc" id="L46">		SwingUtilities.invokeLater(new Runnable() {</span>
+			public void run() {
+				//Inizializza la GUI
+<span class="nc" id="L49">				GuiSimpleClient client = new GuiSimpleClient();</span>
+				try {
+<span class="nc" id="L51">					client.gui = new CoFGui(client);</span>
+<span class="nc" id="L52">					client.gui.setVisible(true);</span>
+<span class="nc" id="L53">				} catch (Exception e) {</span>
+<span class="nc" id="L54">					e.printStackTrace();</span>
+<span class="nc" id="L55">				}</span>
+<span class="nc" id="L56">			}</span>
+		});
+<span class="nc" id="L58">	}</span>
+
+	@Override
+	public void update() {
+		// TODO Auto-generated method stub
+		
+<span class="nc" id="L64">	}</span>
+
+	@Override
+	public void update(VectorPacket&lt;Interaction&gt; change) {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if(change.getType().equals(&quot;Chat&quot;))</span>
+<span class="nc" id="L69">			SwingUtilities.invokeLater(new Runnable(){</span>
+
+				@Override
+				public void run() {
+<span class="nc" id="L73">					gui.chat(change.getContent().printOptions());</span>
+<span class="nc" id="L74">				}</span>
+				
+			});
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if(change.getType().equals((&quot;Info&quot;)))</span>
+<span class="nc" id="L78">			SwingUtilities.invokeLater(new Runnable(){</span>
+
+				@Override
+				public void run() {
+<span class="nc" id="L82">					gui.displayMessage(change.getContent().printOptions(), false);	</span>
+<span class="nc" id="L83">				}</span>
+			});
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if(change.getType().equals((&quot;Error&quot;)))</span>
+<span class="nc" id="L86">			SwingUtilities.invokeLater(new Runnable(){</span>
+
+				@Override
+				public void run() {
+<span class="nc" id="L90">					gui.displayMessage(change.getContent().printOptions(), true);</span>
+<span class="nc" id="L91">				}</span>
+			});
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if(change.getType().equals((&quot;Action&quot;)))</span>
+<span class="nc" id="L94">			SwingUtilities.invokeLater(new Runnable(){</span>
+
+				@Override
+				public void run() {
+<span class="nc" id="L98">					gui.updateAction(change.getContent());</span>
+<span class="nc" id="L99">				}</span>
+			});
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if(change.getType().equals(&quot;GameStatus&quot;))</span>
+<span class="nc" id="L102">		SwingUtilities.invokeLater(new Runnable(){</span>
+		
+			public void run(){
+				@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L106">				DisplayInteraction&lt;GameStatus&gt; updatedGameStatus = (DisplayInteraction&lt;GameStatus&gt;)(change.getContent());</span>
+<span class="nc" id="L107">				gui.update(updatedGameStatus.getContent());</span>
+<span class="nc" id="L108">			}</span>
+		});
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if(change.getType().equals((&quot;Quit&quot;))){</span>
+<span class="nc" id="L111">			SwingUtilities.invokeLater(new Runnable(){</span>
+		
+				public void run(){
+<span class="nc" id="L114">				gui.displayMessage(change.getContent().printOptions().replace(&quot;quit&quot;,&quot;&quot;), true);</span>
+<span class="nc" id="L115">				QuitAction action = new QuitAction();</span>
+<span class="nc" id="L116">				action.actionPerformed(null);</span>
+<span class="nc" id="L117">				}</span>
+			});
+		}
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if(change.getType().equals((&quot;Disconnection&quot;))){</span>
+<span class="nc" id="L121">			SwingUtilities.invokeLater(new Runnable(){</span>
+		
+				public void run(){
+<span class="nc" id="L124">				gui.disconnect(change.getContent().printOptions());</span>
+<span class="nc" id="L125">				}</span>
+			});
+		}
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if(change.getType().equals((&quot;Connection&quot;))){</span>
+<span class="nc" id="L129">			SwingUtilities.invokeLater(new Runnable(){</span>
+		
+				public void run(){
+<span class="nc" id="L132">				gui.connect(change.getContent().printOptions());</span>
+<span class="nc" id="L133">				}</span>
+			});
+		}
+<span class="nc" id="L136">	}</span>
+	
+	/**
+	 * Tries to start the connection
+	 * @param port the port on which to try tthe attempt
+	 * @param ip of the server
+	 * @param connectionType can be one of &quot;Rmi&quot; and &quot;Socket&quot;, with the clear meaning
+	 * @return whether the connection was successfull or not
+	 */
+	public boolean start(int port, String ip, String connectionType) {
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		if(connectionType.equals(&quot;Rmi&quot;)){</span>
+			try {
+				RMIView&lt;VectorPacket&lt;Interaction&gt;&gt; view;
+<span class="nc" id="L149">				view = new RMIView&lt;&gt;(0);</span>
+			Registry registry;
+<span class="nc" id="L151">			registry = LocateRegistry.getRegistry(ip, port);</span>
+<span class="nc" id="L152">			RMIServerInterface server = (RMIServerInterface)registry.lookup(&quot;CD4&quot;);</span>
+			RMIViewRemote twin;
+<span class="nc" id="L154">				twin = server.connectToRmi(view);</span>
+	
+<span class="nc" id="L156">			view.attachTwin(twin);</span>
+<span class="nc" id="L157">			this.attachObserver(view);</span>
+<span class="nc" id="L158">			view.getObservableRmi().attachObserver(this);</span>
+<span class="nc" id="L159">			gui.displayMessage(&quot;Connection accepted  &quot;, false);</span>
+<span class="nc" id="L160">			return true;</span>
+<span class="nc" id="L161">			} catch (RemoteException | NotBoundException e1) {</span>
+<span class="nc" id="L162">				gui.displayMessage(e1.getMessage(), true);</span>
+<span class="nc" id="L163">				return false;</span>
+			}
+		}
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		else if(connectionType.equals(&quot;Socket&quot;)){</span>
+			SocketView&lt;VectorPacket&lt;Interaction&gt;,VectorPacket&lt;Interaction&gt;&gt; view;
+			Socket socket;
+			try {
+<span class="nc" id="L170">				socket = new Socket(ip,port);</span>
+<span class="nc" id="L171">			view = new SocketView&lt;&gt;(socket,0);</span>
+<span class="nc" id="L172">			view.attachObserver(this);</span>
+<span class="nc" id="L173">			this.attachObserver(view);</span>
+<span class="nc" id="L174">			view.run(&quot;RemoteInput&quot;);</span>
+<span class="nc" id="L175">			gui.displayMessage(&quot;Connection accepted  &quot;, false);</span>
+<span class="nc" id="L176">			return true;</span>
+<span class="nc" id="L177">			} catch (IOException e) {</span>
+<span class="nc" id="L178">				gui.displayMessage(e.getMessage(), true);</span>
+<span class="nc" id="L179">				return false;</span>
+			}
+		}
+<span class="nc" id="L182">		return false;</span>
+	}
+
+	/**
+	 * This sends to the server a reply to the interaction that has been filled by the client
+	 * @param actionInteraction is the filled actionInteraction
+	 */
+	public void sendAction(Interaction actionInteraction) {
+<span class="nc" id="L190">		this.notifyObservers(new VectorPacket&lt;Interaction&gt;(actionInteraction,&quot;Action&quot;,0,0));</span>
+<span class="nc" id="L191">	}</span>
+	
+	/**
+	 * Asks the server to change the username of the player associated with this client
+	 * @param newName the new name for the client
+	 */
+	public void changeUsername(String newName){
+<span class="nc" id="L198">		this.notifyObservers(new VectorPacket&lt;Interaction&gt;(new DisplayInteraction&lt;String&gt;(newName),&quot;SetUsername&quot;,0,0));</span>
+<span class="nc" id="L199">	}</span>
+	
+	/**
+	 * Asks the server to disconnect the player associated with this client
+	 * @param message the disconnection message
+	 */
+	public void disconnect(String message){
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		this.notifyObservers(new VectorPacket&lt;Interaction&gt;(new DisplayInteraction&lt;String&gt;((message == null ? &quot;&quot; : message)), &quot;Disconnection&quot;, 0,0));</span>
+<span class="nc" id="L207">	}</span>
+	
+	/**
+	 * Asks the server for a game status to update the interface
+	 * @param message is the optional message for the request
+	 */
+	public void refresh(String message){
+<span class="nc" id="L214">		this.notifyObservers(new VectorPacket&lt;Interaction&gt;(new DisplayInteraction&lt;String&gt;(&quot;&quot;), &quot;Status&quot;, 0,0));</span>
+		
+<span class="nc" id="L216">	}</span>
+
+	/**
+	 * Asks the server to reconnect the player associated with this client
+	 * @param message the reconnection message
+	 */
+	public void connect(String message){
+<span class="nc bnc" id="L223" title="All 2 branches missed.">		this.notifyObservers(new VectorPacket&lt;Interaction&gt;(new DisplayInteraction&lt;String&gt;((message == null ? &quot;&quot; : message)), &quot;Connection&quot;, 0,0));</span>
+<span class="nc" id="L224">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

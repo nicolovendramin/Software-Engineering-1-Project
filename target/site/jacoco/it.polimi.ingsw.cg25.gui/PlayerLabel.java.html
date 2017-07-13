@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PlayerLabel.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.gui</a> &gt; <span class="el_source">PlayerLabel.java</span></div><h1>PlayerLabel.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.gui;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Image;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+
+import it.polimi.ingsw.cg25.model.dto.DTOPlayerCD4;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+@SuppressWarnings(&quot;serial&quot;)
+public class PlayerLabel extends JLabel {
+
+	/**
+	 * The background image of the label
+	 */
+	private Image paperVector;
+	/**
+	 * The string representing player's statistics
+	 */
+	private String vectorString;
+	
+	/**
+	 * PlayerLabel class constructor
+	 * @param player the DTO player used to build the label
+	 * @param font the font to be used for any writing
+	 * @throws IOException if something goes wrong in loading resources
+	 */
+<span class="nc" id="L38">	public PlayerLabel(DTOPlayerCD4 player, Font font) throws IOException {</span>
+<span class="nc" id="L39">		loadResources();</span>
+		
+<span class="nc" id="L41">		Image scaledVector = paperVector.getScaledInstance(220, 135, Image.SCALE_SMOOTH);</span>
+<span class="nc" id="L42">		this.setIcon(new ImageIcon(scaledVector));</span>
+		
+<span class="nc" id="L44">		vectorString = createString(player);</span>
+		
+<span class="nc" id="L46">		this.setSize(this.getIcon().getIconWidth(), this.getIcon().getIconHeight());</span>
+<span class="nc" id="L47">		this.setHorizontalTextPosition(JLabel.CENTER);</span>
+<span class="nc" id="L48">		this.setVerticalTextPosition(JLabel.CENTER);</span>
+<span class="nc" id="L49">		this.setText(vectorString);</span>
+<span class="nc" id="L50">		this.setFont(new Font(font.getFontName(), Font.PLAIN, 15));</span>
+<span class="nc" id="L51">		this.setForeground(Color.BLACK);</span>
+<span class="nc" id="L52">	}</span>
+	
+	/**
+	 * This method loads digital resources for this label
+	 * @throws IOException if something goes wrong while loading
+	 */
+	private void loadResources() throws IOException {
+<span class="nc" id="L59">		paperVector = ImageIO.read(new File(&quot;src/main/resources/paperVector.png&quot;));</span>
+<span class="nc" id="L60">	}</span>
+	
+	/**
+	 * This method creates a string with the whole player's statistics
+	 * @param player the DTO player used to create the string
+	 * @return the string just mentioned above
+	 */
+	private String createString(DTOPlayerCD4 player) {
+<span class="nc" id="L68">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L69">		sb.append(&quot;&lt;html&gt;&quot; + player.getName() + &quot;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L70">		sb.append(&quot;Victory Points: &quot; + player.getPocket().getVictoryPoints() + &quot;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L71">		sb.append(&quot;Nobility Points: &quot; + player.getPocket().getNobilityRank() + &quot;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L72">		sb.append(&quot;Coins: &quot; + player.getPocket().getCoins()+ &quot;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L73">		sb.append(&quot;Assistants: &quot; + player.getPocket().getAssistants() + &quot;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L74">		sb.append(&quot;Color: &quot; + player.getPlayerColor().printTag() + &quot;&lt;/html&gt;&quot;);</span>
+		
+<span class="nc" id="L76">		return sb.toString();</span>
+	}
+	
+	/**
+	 * Update the string linked to this label
+	 * @param player the DTO player used to build and update the string
+	 */
+	public void updateString(DTOPlayerCD4 player) {
+<span class="nc" id="L84">		this.setText(createString(player));</span>
+<span class="nc" id="L85">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

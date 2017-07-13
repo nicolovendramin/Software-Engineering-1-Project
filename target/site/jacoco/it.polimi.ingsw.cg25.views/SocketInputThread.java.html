@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SocketInputThread.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.views</a> &gt; <span class="el_source">SocketInputThread.java</span></div><h1>SocketInputThread.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.views;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.Socket;
+
+import it.polimi.ingsw.cg25.actions.Interaction;
+import it.polimi.ingsw.cg25.communication.Packet;
+/**
+ * 
+ * @author nicolo
+ *
+ * @param &lt;T&gt; the type of packet dispatched by the view of this input thread
+ * @param &lt;E&gt; the tyoe of packet observed by the view of this input thread
+ */
+public class SocketInputThread&lt;T extends Packet&lt;Interaction&gt;,E extends Packet&lt;Interaction&gt;&gt; implements Runnable {
+
+	/**
+	 * The socket on which the view communicates with its remote twin
+	 */
+	private final Socket socket;
+	/**
+	 * The view for which this thread provides the inputs
+	 */
+	private final SocketView&lt;T,E&gt; view;
+	/*
+	 * The status of the thread. False = alive
+	 */
+<span class="nc" id="L29">	private boolean end = false;</span>
+	/**
+	 * The id of the view for which this Input Thread listens the socket
+	 */
+	private final int myViewId;
+	
+	/**
+	 * Constructor
+	 * @param socket is the socket used for communication
+	 * @param view is the view of this thread
+	 * @param id is the view Id
+	 */
+<span class="nc" id="L41">	public SocketInputThread(Socket socket,SocketView&lt;T,E&gt; view,int id) {</span>
+<span class="nc" id="L42">		this.view = view;</span>
+<span class="nc" id="L43">		this.socket = socket;</span>
+<span class="nc" id="L44">		this.myViewId = id;</span>
+<span class="nc" id="L45">	}</span>
+	
+
+	@Override
+	public void run() {
+		ObjectInputStream socketIn;
+		try {
+<span class="nc" id="L52">			socketIn = new ObjectInputStream(socket.getInputStream());</span>
+		try {
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		while(!end){</span>
+			@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L56">			T change = (T)socketIn.readObject();</span>
+			try{
+<span class="nc" id="L58">				change.setPublicSource(myViewId);</span>
+<span class="nc" id="L59">			}catch(IllegalAccessException e){</span>
+<span class="nc" id="L60">			}</span>
+<span class="nc" id="L61">			this.view.notifyObservers(change);</span>
+<span class="nc" id="L62">		}	</span>
+<span class="nc" id="L63">		} catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L64">			e.printStackTrace();</span>
+<span class="nc" id="L65">		}catch(IOException  e){</span>
+<span class="nc" id="L66">			this.view.closeView();</span>
+<span class="nc" id="L67">		}</span>
+		try {
+<span class="nc" id="L69">			socketIn.close();</span>
+<span class="nc" id="L70">		} catch (IOException e) {</span>
+<span class="nc" id="L71">		}</span>
+<span class="nc" id="L72">		} catch (IOException e1) {</span>
+<span class="nc" id="L73">		}</span>
+<span class="nc" id="L74">	}</span>
+	
+	/**
+	 * This methods kills the inputThread so that no more communications are received 
+	 * from the socket
+	 */
+	protected void kill(){
+<span class="nc" id="L81">		this.end = true;</span>
+<span class="nc" id="L82">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

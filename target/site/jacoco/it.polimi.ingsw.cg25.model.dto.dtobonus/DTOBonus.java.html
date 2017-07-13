@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DTOBonus.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.model.dto.dtobonus</a> &gt; <span class="el_source">DTOBonus.java</span></div><h1>DTOBonus.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.model.dto.dtobonus;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import it.polimi.ingsw.cg25.model.dashboard.bonus.Bonus;
+import it.polimi.ingsw.cg25.model.dto.dtoproduct.DTOSellable;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+public abstract class DTOBonus implements DTOSellable {
+	/**
+	 * Serial number for serialization
+	 */
+	private static final long serialVersionUID = -7406100839875431640L;
+	
+	/**
+	 * The bonus quantity
+	 */
+	private final int bnsQnty;
+	/**
+	 * The BonusGenerator object used to create DTO bonuses which
+	 * realizes a visitor pattern
+	 */
+<span class="fc" id="L28">	private static final BonusGenerator bg = new BonusGenerator();</span>
+	
+	/**
+	 * DTOBonus abstract class constructor
+	 * @param bnsQnty the quantity related to the bonus to create
+	 */
+<span class="fc" id="L34">	public DTOBonus(int bnsQnty) {</span>
+<span class="fc" id="L35">		this.bnsQnty = bnsQnty;</span>
+<span class="fc" id="L36">	}</span>
+	
+	/**
+	 * @return the bonus quantity
+	 */
+	public int getBnsQnty() {
+<span class="fc" id="L42">		return bnsQnty;</span>
+	}
+	
+	/**
+	 * Static method to convert a Bonus type object in a DTOBonus object
+	 * @param toConvert the bonus to convert
+	 * @return the corresponding DTOBonus object
+	 */
+	public static DTOBonus convert(Bonus toConvert) {
+<span class="fc" id="L51">		DTOBonus converted = toConvert.generate(bg);</span>
+
+<span class="fc" id="L53">		return converted;</span>
+	}
+	
+	/**
+	 * Static method to convert a list of {@link Bonus} type objects in a List of {@link DTOBonus} objects
+	 * @param toConvert the bonuses to convert
+	 * @return the corresponding List of {@link DTOBonus} objects
+	 */
+	public static List&lt;DTOBonus&gt; convertAll(List&lt;? extends Bonus&gt; toConvert) {
+<span class="fc" id="L62">		List&lt;DTOBonus&gt; converted = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L63">		toConvert.forEach(b -&gt; converted.add(DTOBonus.convert(b)));</span>
+
+<span class="fc" id="L65">		return converted;</span>
+	}
+	
+	@Override
+	public int hashCode() {
+<span class="fc" id="L70">		final int prime = 31;</span>
+<span class="fc" id="L71">		int result = 1;</span>
+<span class="fc" id="L72">		result = prime * result + bnsQnty;</span>
+<span class="fc" id="L73">		return result;</span>
+	}
+
+	@Override
+	public boolean equals(Object bonus) {
+<span class="fc bfc" id="L78" title="All 2 branches covered.">		if(bonus == null)</span>
+<span class="fc" id="L79">			return false;</span>
+		//Se bonus è un DTOBonus
+<span class="fc bfc" id="L81" title="All 2 branches covered.">		if(bonus instanceof DTOBonus) {</span>
+<span class="fc" id="L82">			DTOBonus converted = (DTOBonus)bonus;</span>
+<span class="fc bfc" id="L83" title="All 4 branches covered.">			return this.getClass() == converted.getClass() &amp;&amp; this.getBnsQnty() == converted.getBnsQnty();</span>
+		}
+		//Se bonus è un Bonus
+<span class="fc bfc" id="L86" title="All 2 branches covered.">		if(bonus instanceof Bonus) {</span>
+			//Converti bonus in DTOBonus
+<span class="fc" id="L88">			DTOBonus convertedBonus = DTOBonus.convert((Bonus)bonus);</span>
+			//Controllo tipo e quantità
+<span class="fc bfc" id="L90" title="All 4 branches covered.">			return this.getClass() == convertedBonus.getClass() &amp;&amp; this.getBnsQnty() == convertedBonus.getBnsQnty();</span>
+		}
+<span class="fc" id="L92">		return false;</span>
+	}
+
+	@Override
+	public String toString() {
+<span class="fc" id="L97">		return (this.getClass().getSimpleName()).replaceAll(&quot;DTO&quot;, &quot;&quot;) + &quot;: &quot; + bnsQnty;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

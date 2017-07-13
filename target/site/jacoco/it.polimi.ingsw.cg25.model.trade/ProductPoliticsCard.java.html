@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ProductPoliticsCard.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.model.trade</a> &gt; <span class="el_source">ProductPoliticsCard.java</span></div><h1>ProductPoliticsCard.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.model.trade;
+
+import java.util.List;
+
+import it.polimi.ingsw.cg25.model.PlayerCD4;
+import it.polimi.ingsw.cg25.model.dashboard.cards.PoliticsCard;
+import it.polimi.ingsw.cg25.model.dto.dtoproduct.DTOProduct;
+import it.polimi.ingsw.cg25.model.dto.dtoproduct.DTOSellable;
+import it.polimi.ingsw.cg25.model.dto.dtoproduct.ProductGenerator;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+public class ProductPoliticsCard extends Product&lt;PoliticsCard&gt; {
+	
+	/**
+	 * ProductPoliticsCard class constructor
+	 * @param polCard the List of politics cards included in this product
+	 * @param price the price of the product
+	 * @param owner the owner of the product
+	 */
+	public ProductPoliticsCard(int price, PlayerCD4 owner, List&lt;PoliticsCard&gt; polCard, int barcode) {
+<span class="fc" id="L25">		super(price, owner, polCard, barcode);</span>
+<span class="fc" id="L26">	}</span>
+
+	/**
+	 * the player who will buy this product will also achieve
+	 * the politics card included in the product itself
+	 * @param target the player who buy the product
+	 */
+	@Override
+	public void achieveProduct(PlayerCD4 target) {
+		//Assegna al giocatore la carta politica contenuta nel prodotto
+<span class="fc" id="L36">		target.getPoliticsCards().addAll(this.getContent());</span>
+<span class="fc" id="L37">	}</span>
+
+	@Override
+	public DTOProduct&lt;? extends DTOSellable&gt; generate(ProductGenerator pg) {
+<span class="fc" id="L41">		return pg.visit(this);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

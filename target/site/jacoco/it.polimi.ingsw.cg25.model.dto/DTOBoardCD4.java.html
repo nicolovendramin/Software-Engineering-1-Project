@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DTOBoardCD4.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.model.dto</a> &gt; <span class="el_source">DTOBoardCD4.java</span></div><h1>DTOBoardCD4.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.model.dto;
+
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
+
+import it.polimi.ingsw.cg25.model.BoardCD4;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+public class DTOBoardCD4 implements DTO {
+
+	/**
+	 * Serial number for serialization
+	 */
+	private static final long serialVersionUID = -7302156554831097878L;
+	/**
+	 * the regions included in the board
+	 */
+	private final List&lt;DTORegion&gt; regions;
+	/**
+	 * the king's council of the board
+	 */
+	private final DTOCouncil kingCouncil;
+	/**
+	 * the nobility track with all its cells
+	 */
+	private final List&lt;DTONobilityCell&gt; nobilityTrack;
+	/**
+	 * the List of unemployed councelors
+	 */
+	private final List&lt;DTOCouncelor&gt; unemployedCouncelors;
+	/**
+	 * the List of cities
+	 */
+	private final List&lt;DTOCity&gt; cities;
+	/**
+	 * the city where the king is
+	 */
+	private final DTOCity kingCity;
+	/**
+	 * The upper king reward card
+	 */
+	private final DTORewardCard kingReward;
+	/**
+	 * the DTO counterpart of the graph
+	 */
+	private final SimpleGraph&lt;DTOCity, DefaultEdge&gt; roadNetwork;
+	
+	/**
+	 * DTOBoardCD4 class constructor
+	 * @param board the BoardCD4 type object to convert
+	 * @throws NullPointerException if board is null
+	 */
+<span class="fc" id="L60">	public DTOBoardCD4(BoardCD4 board) {</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">		if(board == null)</span>
+<span class="fc" id="L62">			throw new NullPointerException(&quot;You can't create a DTO board without a valid board!&quot;);</span>
+		
+<span class="fc" id="L64">		this.regions = DTORegion.convertAll(board.getRegions());</span>
+<span class="fc" id="L65">		this.kingCouncil = new DTOCouncil(board.getKingCouncil());</span>
+<span class="fc" id="L66">		this.nobilityTrack = DTONobilityCell.convertAll(board.getNobilityTrack());</span>
+<span class="fc" id="L67">		this.unemployedCouncelors = DTOCouncelor.convertAll(board.getUnemployedCouncelors());</span>
+<span class="fc" id="L68">		this.cities = DTOCity.convertAll(board.getCities());</span>
+<span class="fc" id="L69">		this.kingCity = new DTOCity(board.getKing().getCurrentCity());</span>
+		
+		//It could be null
+<span class="fc" id="L72">		this.kingReward = new DTORewardCard(board.getKingTiles().peek());</span>
+		
+<span class="fc" id="L74">		this.roadNetwork = new SimpleGraph&lt;&gt;(DefaultEdge.class);</span>
+		//Setting up the graph with DTOCity vertexes
+		//Vertexes are the DTO cities included in the DTO Board
+		//Add vertexes
+<span class="fc bfc" id="L78" title="All 2 branches covered.">		for(DTOCity c : this.cities)</span>
+<span class="fc" id="L79">			this.roadNetwork.addVertex(c);</span>
+		//Add edges
+<span class="fc bfc" id="L81" title="All 2 branches covered.">		for(DefaultEdge edge : board.getRoadNetwork().edgeSet()) {</span>
+<span class="fc" id="L82">			this.roadNetwork.addEdge(cityFromName(board.getRoadNetwork().getEdgeSource(edge).getName()), </span>
+<span class="fc" id="L83">					cityFromName(board.getRoadNetwork().getEdgeTarget(edge).getName()));</span>
+<span class="fc" id="L84">		}</span>
+<span class="fc" id="L85">	}</span>
+
+	/**
+	 * @return the List of DTO regions
+	 */
+	public List&lt;DTORegion&gt; getRegions() {
+<span class="fc" id="L91">		return regions;</span>
+	}
+
+	/**
+	 * @return the DTO king's council
+	 */
+	public DTOCouncil getKingCouncil() {
+<span class="fc" id="L98">		return kingCouncil;</span>
+	}
+
+	/**
+	 * @return the List of DTO nobility cells
+	 */
+	public List&lt;DTONobilityCell&gt; getNobilityTrack() {
+<span class="fc" id="L105">		return nobilityTrack;</span>
+	}
+
+	/**
+	 * @return the List of DTO unemployed councelors
+	 */
+	public List&lt;DTOCouncelor&gt; getUnemployedCouncelors() {
+<span class="fc" id="L112">		return unemployedCouncelors;</span>
+	}
+
+	/**
+	 * @return the List f DTO cities
+	 */
+	public List&lt;DTOCity&gt; getCities() {
+<span class="fc" id="L119">		return cities;</span>
+	}
+
+	/**
+	 * @return the DTO city where the King is
+	 */
+	public DTOCity getKingCity() {
+<span class="fc" id="L126">		return kingCity;</span>
+	}
+
+	/**
+	 * @return the upper king reward DTO card
+	 */
+	public DTORewardCard getKingReward() {
+<span class="fc" id="L133">		return kingReward;</span>
+	}
+
+	/**
+	 * @return the graph in which vertexes are DTO cities
+	 */
+	public SimpleGraph&lt;DTOCity, DefaultEdge&gt; getRoadNetwork() {
+<span class="fc" id="L140">		return roadNetwork;</span>
+	}
+	
+	/**
+	 * Private method used by the constructor of the class in order to select
+	 * a city by its name.
+	 * @param name the name of the city to find
+	 * @return the corresponding DTO city
+	 * @throws NoSuchElementException if the city of that name is not found
+	 */
+	private DTOCity cityFromName(String name) {
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">		for(DTOCity c : this.cities) {</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">			if(c.getName().equals(name))</span>
+<span class="fc" id="L153">				return c;</span>
+<span class="fc" id="L154">		}</span>
+<span class="nc" id="L155">		throw new NoSuchElementException(&quot;Error in creating the DTO graph!&quot;);</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

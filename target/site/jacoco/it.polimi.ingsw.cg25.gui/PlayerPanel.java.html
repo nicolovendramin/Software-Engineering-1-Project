@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PlayerPanel.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.gui</a> &gt; <span class="el_source">PlayerPanel.java</span></div><h1>PlayerPanel.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">package it.polimi.ingsw.cg25.gui;</span>
+
+import java.awt.Font;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
+import javax.swing.JOptionPane;
+
+import it.polimi.ingsw.cg25.model.dto.DTOPlayerCD4;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+@SuppressWarnings(&quot;serial&quot;)
+public class PlayerPanel extends JLayeredPane implements Updatable&lt;DTOPlayerCD4&gt; {
+
+	/**
+	 * Progress bar width
+	 */
+	private static final int PROG_WIDTH = 160;
+	/**
+	 * Progress bar height
+	 */
+	private static final int PROG_HEIGTH = 20;
+	/**
+	 * Spece between progress bars
+	 */
+	private static final int PROG_SPACING = 45;
+	/**
+	 * Background layer level
+	 */
+	private static final int BACK_LAYER = 0;
+	/**
+	 * Components layer level
+	 */
+	private static final int COMP_LAYER = 1;
+	/**
+	 * Image for the background
+	 */
+	private Image paperVectorPL;
+	/**
+	 * Victory icon image
+	 */
+	private Image victoryIcon;
+	/**
+	 * Nobility icon image
+	 */
+	private Image nobilityIcon;
+	/**
+	 * Coin icon image
+	 */
+	private Image coinIcon;
+	/**
+	 * Assistant icon image
+	 */
+	private Image asIcon;
+	/**
+	 * Action button
+	 */
+<span class="nc" id="L72">	private JButton mainAct = new JButton(&quot;Actions&quot;);</span>
+	/**
+	 * Perit cards button
+	 */
+<span class="nc" id="L76">	private JButton permits = new JButton(&quot;Permit Cards&quot;);</span>
+	/**
+	 * Politics card button
+	 */
+<span class="nc" id="L80">	private JButton politics = new JButton(&quot;Politics Cards&quot;);</span>
+	/**
+	 * The current player
+	 */
+	private DTOPlayerCD4 me;
+	/**
+	 * Initial setup ? first update : generic update
+	 */
+<span class="nc" id="L88">	private boolean initSet = true;</span>
+	/**
+	 * Progress bars for player's statistics
+	 */
+	private final List&lt;PlayerProgBar&gt; bars;
+	
+	/**
+	 * PlayerPanel class constructor initializes the player panel
+	 * @param x the horizontal position of the panel
+	 * @param y the vertical position of the panel
+	 * @param w the width of the panel
+	 * @param h the height of the panel
+	 * @param font the font for any writing
+	 * @param gui the gui reference
+	 */
+<span class="nc" id="L103">	public PlayerPanel(int x, int y, int w, int h, Font font, CoFGui gui) {</span>
+<span class="nc" id="L104">		this.setLayout(null);</span>
+		//this.gui = gui;
+<span class="nc" id="L106">		this.setBounds(x, y, w, h);</span>
+		
+		try {
+<span class="nc" id="L109">			loadResources();</span>
+<span class="nc" id="L110">		} catch (IOException e) {</span>
+<span class="nc" id="L111">			System.out.println(&quot;Failed while loading player's resources!&quot;);</span>
+		}
+		
+<span class="nc" id="L114">		Image scaledPVector = paperVectorPL.getScaledInstance(w, h, Image.SCALE_SMOOTH);</span>
+<span class="nc" id="L115">		JLabel paperBack = new JLabel(new ImageIcon(scaledPVector));</span>
+<span class="nc" id="L116">		paperBack.setBounds(0, 0, paperBack.getIcon().getIconWidth(), paperBack.getIcon().getIconHeight());</span>
+<span class="nc" id="L117">		this.add(paperBack);</span>
+<span class="nc" id="L118">		this.setLayer(paperBack, BACK_LAYER);</span>
+		
+<span class="nc" id="L120">		Image scaledVicIcon = victoryIcon.getScaledInstance(28, 37, Image.SCALE_SMOOTH);</span>
+<span class="nc" id="L121">		JLabel vic = new JLabel(new ImageIcon(scaledVicIcon));</span>
+<span class="nc" id="L122">		vic.setBounds(20, 36, vic.getIcon().getIconWidth(), vic.getIcon().getIconHeight());</span>
+<span class="nc" id="L123">		this.add(vic);</span>
+<span class="nc" id="L124">		this.setLayer(vic, COMP_LAYER);</span>
+		
+<span class="nc" id="L126">		Image scaledNobIcon = nobilityIcon.getScaledInstance(30, 30, Image.SCALE_SMOOTH);</span>
+<span class="nc" id="L127">		JLabel nob = new JLabel(new ImageIcon(scaledNobIcon));</span>
+<span class="nc" id="L128">		nob.setBounds(20, 85, nob.getIcon().getIconWidth(), nob.getIcon().getIconHeight());</span>
+<span class="nc" id="L129">		this.add(nob);</span>
+<span class="nc" id="L130">		this.setLayer(nob, COMP_LAYER);</span>
+		
+<span class="nc" id="L132">		Image scaledCoinIcon = coinIcon.getScaledInstance(30, 30, Image.SCALE_SMOOTH);</span>
+<span class="nc" id="L133">		JLabel coin = new JLabel(new ImageIcon(scaledCoinIcon));</span>
+<span class="nc" id="L134">		coin.setBounds(20, 129, coin.getIcon().getIconWidth(), coin.getIcon().getIconHeight());</span>
+<span class="nc" id="L135">		this.add(coin);</span>
+<span class="nc" id="L136">		this.setLayer(coin, COMP_LAYER);</span>
+		
+<span class="nc" id="L138">		Image scaledAsIcon = asIcon.getScaledInstance(20, 43, Image.SCALE_SMOOTH);</span>
+<span class="nc" id="L139">		JLabel as = new JLabel(new ImageIcon(scaledAsIcon));</span>
+<span class="nc" id="L140">		as.setBounds(25, 170, as.getIcon().getIconWidth(), as.getIcon().getIconHeight());</span>
+<span class="nc" id="L141">		this.add(as);</span>
+<span class="nc" id="L142">		this.setLayer(as, COMP_LAYER);</span>
+		
+<span class="nc" id="L144">		bars = new ArrayList&lt;&gt;();</span>
+		
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		for (int i = 0; i &lt; 4; i++) {</span>
+<span class="nc" id="L147">			PlayerProgBar bar = new PlayerProgBar(64, 45 + i*PROG_SPACING, PROG_WIDTH, PROG_HEIGTH);</span>
+<span class="nc" id="L148">			bar.setValue(0);</span>
+<span class="nc" id="L149">			bars.add(bar);</span>
+<span class="nc" id="L150">			this.add(bar);</span>
+<span class="nc" id="L151">			this.setLayer(bar, COMP_LAYER);</span>
+		}
+		
+<span class="nc" id="L154">		JLabel player = new JLabel();</span>
+<span class="nc" id="L155">		player.setBounds(182, 4, 50, 25);</span>
+<span class="nc" id="L156">		player.setText(&quot;Player&quot;);</span>
+<span class="nc" id="L157">		player.setFont(new Font(gui.getFont().getFontName(), Font.PLAIN, 18));</span>
+<span class="nc" id="L158">		this.add(player);</span>
+<span class="nc" id="L159">		this.setLayer(player, COMP_LAYER);</span>
+		
+<span class="nc" id="L161">		JLabel color = new JLabel();</span>
+<span class="nc" id="L162">		color.setBounds(25, 222, 50, 25);</span>
+<span class="nc" id="L163">		color.setText(&quot;Color:&quot;);</span>
+<span class="nc" id="L164">		color.setFont(new Font(gui.getFont().getFontName(), Font.PLAIN, 16));</span>
+<span class="nc" id="L165">		this.add(color);</span>
+<span class="nc" id="L166">		this.setLayer(color, COMP_LAYER);</span>
+<span class="nc" id="L167">		mainAct.setBounds(125, 220, 100, 25);</span>
+<span class="nc" id="L168">		mainAct.setFont(new Font(gui.getFont().getFontName(), Font.PLAIN, 13));</span>
+<span class="nc" id="L169">		mainAct.addActionListener(new ActionListener(){</span>
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L173">				gui.getChoiceFrame().display();</span>
+				
+<span class="nc" id="L175">			}</span>
+			
+		});
+<span class="nc" id="L178">		this.add(mainAct);</span>
+<span class="nc" id="L179">		this.setLayer(mainAct, 1);</span>
+<span class="nc" id="L180">		mainAct.setMnemonic('a');</span>
+<span class="nc" id="L181">		politics.addActionListener(new ActionListener(){</span>
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L185" title="All 6 branches missed.">				if(me != null &amp;&amp; me.getHand()!=null &amp;&amp; me.getHand().size()!=0)</span>
+<span class="nc" id="L186">					new CardDisplayer(me.getHand());</span>
+				else
+<span class="nc" id="L188">					JOptionPane.showMessageDialog(null, &quot;No Politics Cards to display&quot;, &quot;Error&quot;, JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L189">			}</span>
+			
+		});
+<span class="nc" id="L192">		politics.setBounds(20, 255, 100, 25);</span>
+<span class="nc" id="L193">		politics.setFont(new Font(gui.getFont().getFontName(), Font.PLAIN, 13));</span>
+<span class="nc" id="L194">		politics.setMnemonic('p');</span>
+<span class="nc" id="L195">		this.add(politics);</span>
+<span class="nc" id="L196">		this.setLayer(politics, 1);</span>
+		
+<span class="nc" id="L198">		permits.addActionListener(new ActionListener(){</span>
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L202" title="All 6 branches missed.">				if(me != null &amp;&amp; me.getPermitsToBeUsed()!=null &amp;&amp; me.getPermitsToBeUsed().size()!=0)</span>
+<span class="nc" id="L203">					new CardDisplayer(me.getPermitsToBeUsed(), gui.getFont());</span>
+				else
+<span class="nc" id="L205">					JOptionPane.showMessageDialog(null, &quot;No Permit Cards to display&quot;, &quot;Error&quot;, JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L206">			}</span>
+			
+		});
+<span class="nc" id="L209">		permits.setBounds(125, 255, 100, 25);</span>
+<span class="nc" id="L210">		permits.setFont(new Font(gui.getFont().getFontName(), Font.PLAIN, 13));</span>
+<span class="nc" id="L211">		permits.setMnemonic('c');</span>
+<span class="nc" id="L212">		this.add(permits);</span>
+<span class="nc" id="L213">		this.setLayer(permits, 1);</span>
+<span class="nc" id="L214">	}</span>
+	
+	/**
+	 * This method loads all the graphics resources
+	 * @throws IOException if some resources are missing
+	 */
+	private void loadResources() throws IOException {
+<span class="nc" id="L221">		victoryIcon = ImageIO.read(new File(&quot;src/main/resources/vicIcon.png&quot;));</span>
+<span class="nc" id="L222">		nobilityIcon = ImageIO.read(new File(&quot;src/main/resources/nobIcon.png&quot;));</span>
+<span class="nc" id="L223">		coinIcon = ImageIO.read(new File(&quot;src/main/resources/coinIcon.png&quot;));</span>
+<span class="nc" id="L224">		asIcon = ImageIO.read(new File(&quot;src/main/resources/asIcon.png&quot;));</span>
+<span class="nc" id="L225">		paperVectorPL = ImageIO.read(new File(&quot;src/main/resources/paperVectorPL.png&quot;));</span>
+<span class="nc" id="L226">	}</span>
+
+	@Override
+	public void update(DTOPlayerCD4 object) {
+<span class="nc" id="L230">		this.me = object;</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">		if(initSet) {</span>
+<span class="nc" id="L232">			JLabel colorBox = new JLabel();</span>
+<span class="nc" id="L233">			colorBox.setBounds(75, 223, 20, 20);</span>
+<span class="nc" id="L234">			colorBox.setOpaque(true);</span>
+<span class="nc" id="L235">			colorBox.setBackground(object.getPlayerColor());</span>
+<span class="nc" id="L236">			this.add(colorBox);</span>
+<span class="nc" id="L237">			this.setLayer(colorBox, COMP_LAYER);</span>
+<span class="nc" id="L238">			initSet = false;</span>
+		}
+<span class="nc" id="L240">		bars.get(0).setValue(object.getPocket().getVictoryPoints());</span>
+<span class="nc" id="L241">		bars.get(1).setValue(object.getPocket().getNobilityRank());</span>
+<span class="nc" id="L242">		bars.get(2).setValue(object.getPocket().getCoins());</span>
+<span class="nc" id="L243">		bars.get(3).setValue(object.getPocket().getAssistants());</span>
+		
+<span class="nc" id="L245">		this.repaint();</span>
+<span class="nc" id="L246">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

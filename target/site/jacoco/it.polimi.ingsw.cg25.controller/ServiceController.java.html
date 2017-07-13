@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ServiceController.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.controller</a> &gt; <span class="el_source">ServiceController.java</span></div><h1>ServiceController.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.controller;
+
+import java.util.Date;
+
+import it.polimi.ingsw.cg25.actions.DisplayInteraction;
+import it.polimi.ingsw.cg25.actions.Interaction;
+import it.polimi.ingsw.cg25.communication.VectorPacket;
+import it.polimi.ingsw.cg25.onlinegenerics.OnlineApplication;
+import it.polimi.ingsw.cg25.proxies.ViewProxy;
+/**
+ * 
+ * @author nicolo
+ *
+ */
+public class ServiceController {
+
+	/**
+	 * Reference to the game on which this controller applies the required services
+	 */
+	private OnlineApplication game;
+	/**
+	 * The view Proxy used by the controller as an interface with the users
+	 */
+	private ViewProxy proxy;
+	/**
+	 * Just a string to avoid rewriting of &quot;Error&quot; ad packet type
+	 */
+	private static final String ERROR = &quot;Error&quot;;
+
+	/**
+	 * Constructor for service Controller
+	 * @param game the online application that acts as model for this controller
+	 */
+<span class="fc" id="L34">	public ServiceController(OnlineApplication game) {</span>
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">		if(game == null)</span>
+<span class="nc" id="L36">			throw new IllegalArgumentException(&quot;Need a valid game to instantiate the service controller&quot;);</span>
+<span class="fc" id="L37">		this.game = game;</span>
+<span class="fc" id="L38">	}</span>
+	
+	/**
+	 * Sets the interface to be used with the views
+	 * @param proxy the viewProxy to be set
+	 */
+	public void setProxy(ViewProxy proxy) {
+<span class="fc bfc" id="L45" title="All 2 branches covered.">		if(proxy == null)</span>
+<span class="fc" id="L46">			throw new IllegalArgumentException(&quot;No null proxies are accepted&quot;);</span>
+<span class="fc" id="L47">		this.proxy = proxy;</span>
+<span class="fc" id="L48">	}</span>
+	
+	/**
+	 * This method is called from the viewProxy to ask the service controller to 
+	 * perform a service
+	 * @param packet the VectorPacket containing the non-action interaction
+	 */
+	public void sendInteraction(VectorPacket&lt;Interaction&gt; packet){
+<span class="fc bfc" id="L56" title="All 2 branches covered.">		if(packet == null)</span>
+<span class="fc" id="L57">			throw new IllegalArgumentException(&quot;Null packet received&quot;);</span>
+<span class="fc" id="L58">		Date data = new Date();</span>
+		String msg;
+<span class="pc bpc" id="L60" title="7 of 22 branches missed.">		switch(packet.getType()){</span>
+		
+		 // A user is asking to be disconnected from the game
+		case &quot;Disconnection&quot;:
+<span class="fc" id="L64">			game.disconnect(packet.getPublicSource(),packet.getContent().printOptions());</span>
+<span class="fc" id="L65">			msg = &quot;[info] the user &quot; + game.addressBook(packet.getPublicSource()) + &quot; is no longer connected. &quot; + packet.getContent().printOptions();</span>
+<span class="fc" id="L66">			proxy.send(new DisplayInteraction&lt;String&gt;(msg), &quot;Info&quot;,-packet.getPublicSource());</span>
+<span class="fc" id="L67">			proxy.send(new DisplayInteraction&lt;String&gt;(&quot;You have been disconnected.&quot;.concat(packet.getContent().printOptions())), &quot;Disconnection&quot;, packet.getPublicSource());</span>
+<span class="fc" id="L68">			break;</span>
+			
+		// A user is asking to be connected to the game
+		case &quot;Connection&quot;:
+			try{
+<span class="fc" id="L73">				game.connect(packet.getPublicSource());</span>
+<span class="fc" id="L74">				msg = &quot;[info] the user &quot; + game.addressBook(packet.getPublicSource()) + &quot; has come back to the game. &quot; + packet.getContent().printOptions();</span>
+<span class="fc" id="L75">				proxy.send(new DisplayInteraction&lt;String&gt;(msg), &quot;Info&quot;,-packet.getPublicSource());</span>
+<span class="fc" id="L76">				proxy.send(new DisplayInteraction&lt;String&gt;(&quot;You have been reconnected.&quot;.concat(packet.getContent().printOptions())), &quot;Connection&quot;, packet.getPublicSource());</span>
+<span class="fc" id="L77">			}</span>
+<span class="nc" id="L78">			catch(IllegalArgumentException e){</span>
+<span class="nc" id="L79">				proxy.send(new DisplayInteraction&lt;String&gt;(e.getMessage()), ERROR,packet.getPublicSource());</span>
+			}
+<span class="nc" id="L81">			break;</span>
+			
+		 // A user is sending a message in the public chat
+		case &quot;Chat&quot;:
+<span class="fc" id="L85">			msg = </span>
+<span class="fc" id="L86">					&quot;[Public Chat] &quot; + </span>
+<span class="fc" id="L87">					data.toString() + &quot; - &quot; + game.addressBook(packet.getPublicSource())</span>
+<span class="fc" id="L88">					+ &quot; : &quot; + packet.getContent().printOptions();</span>
+<span class="fc" id="L89">			game.chat(msg);</span>
+<span class="fc" id="L90">			proxy.send(new DisplayInteraction&lt;String&gt;(msg), packet.getType());</span>
+<span class="fc" id="L91">			break;</span>
+			
+		// A user is sending a private message to an user 
+		case &quot;Pm&quot;:
+<span class="fc" id="L95">			String []parts = packet.getContent().printOptions().split(&quot;@@&quot;);</span>
+<span class="fc" id="L96">			int dest = 0;</span>
+			try{
+<span class="fc" id="L98">				dest = game.nameService(parts[1]);</span>
+<span class="fc" id="L99">				msg = </span>
+<span class="fc" id="L100">						&quot;[Private Chat] &quot; + </span>
+<span class="fc" id="L101">								data.toString() + &quot; - &quot; + game.addressBook(packet.getPublicSource())</span>
+<span class="fc" id="L102">								+ &quot; : &quot; + parts[0];</span>
+<span class="fc" id="L103">				proxy.send(new DisplayInteraction&lt;String&gt;(msg),&quot;Chat&quot;,dest);</span>
+<span class="fc" id="L104">				break;</span>
+<span class="fc" id="L105">			}catch(IllegalArgumentException | IndexOutOfBoundsException e){</span>
+<span class="fc" id="L106">				proxy.send(new DisplayInteraction&lt;String&gt;(&quot;Something went wrong with your Pm&quot;), ERROR,packet.getPublicSource());</span>
+<span class="fc" id="L107">				break;</span>
+			}
+			
+		case &quot;SetUsername&quot;:
+			try{
+<span class="fc" id="L112">				String formerName = game.addressBook(packet.getPublicSource());</span>
+<span class="fc" id="L113">				game.changeUsername(packet.getPublicSource(), packet.getContent().printOptions());</span>
+<span class="fc" id="L114">				msg = &quot;[info] the user &quot; + formerName + &quot; has changed his name to &quot; + packet.getContent().printOptions();</span>
+<span class="fc" id="L115">				proxy.send(new DisplayInteraction&lt;String&gt;(msg), &quot;Info&quot;);</span>
+<span class="pc" id="L116">			}catch(Exception e){</span>
+<span class="nc" id="L117">				proxy.send(new DisplayInteraction&lt;String&gt;(e.getMessage()), ERROR,packet.getPublicSource());</span>
+<span class="nc" id="L118">				return;</span>
+			}
+			break;
+			
+		case &quot;Status&quot;:
+			try{
+<span class="fc" id="L124">				proxy.send(new DisplayInteraction&lt;&gt;(this.game.getStatus(packet.getPublicSource())),&quot;GameStatus&quot;,packet.getPublicSource());</span>
+<span class="pc" id="L125">			}catch(Exception e){</span>
+<span class="nc" id="L126">				proxy.send(new DisplayInteraction&lt;String&gt;(&quot;Either the game is not running or the player is unknown&quot;), ERROR,packet.getPublicSource());</span>
+<span class="nc" id="L127">				return;</span>
+			}
+			break;
+		case &quot;Quit&quot;:
+			try{
+<span class="fc" id="L132">				this.game.disconnect(packet.getPublicSource(), &quot;Quitted the game&quot;);</span>
+<span class="fc" id="L133">				proxy.send(new DisplayInteraction&lt;String&gt;(&quot;[info]&quot; + new Date().toString() + &quot; the player &quot; + this.game.addressBook(packet.getPublicSource()) + &quot; has left the game.&quot;), &quot;Info&quot;,-packet.getPublicSource());</span>
+<span class="fc" id="L134">				proxy.send(new DisplayInteraction&lt;String&gt;(&quot;[Quit]&quot; + new Date().toString() + &quot; You have just left the game. &quot;), &quot;Info&quot;,packet.getPublicSource());</span>
+<span class="pc" id="L135">			}catch(Exception e){</span>
+<span class="nc" id="L136">				proxy.send(new DisplayInteraction&lt;String&gt;(&quot;Who are you?&quot;), ERROR );</span>
+			}
+<span class="nc" id="L138">			break;</span>
+
+		// The type of the message is not a known service
+		default:
+<span class="fc" id="L142">			proxy.send(new DisplayInteraction&lt;String&gt;(&quot;Not recognised option&quot;),ERROR,packet.getPublicSource());</span>
+			break;
+		}
+<span class="fc" id="L145">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

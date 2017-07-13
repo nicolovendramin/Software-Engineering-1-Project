@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>SellAssistant.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.actions</a> &gt; <span class="el_source">SellAssistant.java</span></div><h1>SellAssistant.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.actions;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import it.polimi.ingsw.cg25.exceptions.CannotPerformActionException;
+import it.polimi.ingsw.cg25.exceptions.CannotSetupActionException;
+import it.polimi.ingsw.cg25.exceptions.NotEnoughAssistantsException;
+import it.polimi.ingsw.cg25.model.Assistant;
+import it.polimi.ingsw.cg25.model.dashboard.bonus.AssistantBonus;
+import it.polimi.ingsw.cg25.model.dashboard.bonus.Bonus;
+import it.polimi.ingsw.cg25.model.trade.Market;
+import it.polimi.ingsw.cg25.model.trade.ProductBonus;
+/**
+ * 
+ * @author nicolo
+ *
+ */
+public class SellAssistant extends SellingAction{
+
+	/**
+	 * The interaction for the choice of the number of assistants to sell
+	 */
+	private AskQuantityInteraction numberOfAssistant;
+	
+	/**
+	 * Simple constructor for the Action
+	 * @param model is the reference to the market to which the action has to be applied
+	 */
+	public SellAssistant(Market model) {
+<span class="fc" id="L31">		super(model);</span>
+<span class="fc" id="L32">	}</span>
+
+	@Override
+	public Action doAction() throws CannotPerformActionException {
+		try {
+<span class="fc" id="L37">			this.getModel().getCurrentPlayer().getPocket().subPocketable(new Assistant(numberOfAssistant.getReply()));</span>
+<span class="fc" id="L38">		} catch (NotEnoughAssistantsException e) {</span>
+<span class="fc" id="L39">			this.getModel().getLogger().log(e);</span>
+<span class="fc" id="L40">			throw new CannotPerformActionException(&quot;You cannot sell more assistants than the one you have in your pocket&quot;);</span>
+		}
+		//AGGIUNTO DA GIO
+<span class="fc" id="L43">		List&lt;Bonus&gt; assistantsToSell = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L44">		assistantsToSell.add(new AssistantBonus(numberOfAssistant.getReply()));</span>
+<span class="fc" id="L45">		this.getModel().addProduct(new ProductBonus(super.getPrice(), </span>
+<span class="fc" id="L46">				this.getModel().getCurrentPlayer(), assistantsToSell, this.getModel().getNextProductTag()));</span>
+		
+<span class="fc" id="L48">		return new ChooseActionTypeAction&lt;&gt;(this.getModel());</span>
+	}
+
+	/**
+	 * The explicit setup for the action
+	 * @param numberOfAssistants is the max number of assistans that the player can sell
+	 * @throws CannotSetupActionException if this number is 0
+	 */
+	public void setup(int numberOfAssistants) throws CannotSetupActionException{
+		try{
+<span class="fc" id="L58">			this.numberOfAssistant = new AskQuantityInteraction(&quot;Write how many assistants you want to sell&quot;,numberOfAssistants);</span>
+<span class="fc" id="L59">		}</span>
+<span class="fc" id="L60">		catch(IllegalArgumentException e){</span>
+<span class="fc" id="L61">			this.getModel().getLogger().log(e);</span>
+<span class="fc" id="L62">			throw new CannotSetupActionException(&quot;You don't have any Assistant to sell&quot;,e);</span>
+		}
+<span class="fc" id="L64">		super.setInteraction(numberOfAssistant);</span>
+<span class="fc" id="L65">		super.setup();</span>
+<span class="fc" id="L66">	}</span>
+	
+	@Override
+	public void setup() throws CannotSetupActionException{
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">		if(this.getInteractions().size()!=0)</span>
+<span class="nc" id="L71">			return;</span>
+<span class="fc" id="L72">		this.setup(this.getModel().getCurrentPlayer().getPocket().getAssistants().getSupply());</span>
+<span class="fc" id="L73">	}</span>
+
+	@Override
+	public String toString(){
+<span class="fc" id="L77">		return &quot;Sell some of your assistants&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

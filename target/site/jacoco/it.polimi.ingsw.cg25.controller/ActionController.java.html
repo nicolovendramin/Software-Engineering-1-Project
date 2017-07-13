@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ActionController.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.controller</a> &gt; <span class="el_source">ActionController.java</span></div><h1>ActionController.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.controller;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import it.polimi.ingsw.cg25.actions.Action;
+import it.polimi.ingsw.cg25.actions.DisplayInteraction;
+import it.polimi.ingsw.cg25.actions.Interaction;
+import it.polimi.ingsw.cg25.communication.UnserializedVectorPacket;
+import it.polimi.ingsw.cg25.communication.VectorPacket;
+import it.polimi.ingsw.cg25.observer.Observable;
+import it.polimi.ingsw.cg25.observer.Observer;
+import it.polimi.ingsw.cg25.proxies.ViewProxy;
+import it.polimi.ingsw.cg25.servers.TimeChecker;
+/**
+ * This controller is asked to manage the filling of the action from the current player
+ * and to check the time to avoid lazy users to kill the match
+ * 
+ * @author nicolo
+ *
+ */
+public class ActionController extends Observable&lt;Action&gt; implements Observer&lt;UnserializedVectorPacket&lt;Action&gt;&gt; {
+
+	/**
+	 * The action which the controller is asking the user to fill
+	 */
+	private Action currentlyExecutingAction;
+	/**
+	 * The reference to the viewProxy that the ActionController uses as an interface 
+	 * with the users
+	 */
+	private ViewProxy viewProxy;
+	/**
+	 * The number of milliseconds to be used as action time out
+	 */
+	private final int actionTimer;
+	/**
+	 * The timer used to kick lazy users
+	 */
+	private ActionTimeChecker timer;
+	/**
+	 * The type of the last packet received from the modelProxy
+	 */
+	private String currentPacketType;
+	
+	/**
+	 * 
+	 * @author nicolo
+	 *
+	 */
+	private class ActionTimeChecker extends TimeChecker{
+
+		/**
+		 * Simple constructor for the action time checker
+		 * @param expirationDates is the list of dates to check
+		 */
+<span class="nc" id="L57">		public ActionTimeChecker(List&lt;Date&gt; expirationDates) {</span>
+<span class="nc" id="L58">			super(expirationDates);</span>
+<span class="nc" id="L59">		}</span>
+
+		/**
+		 * This constructor instantiates a timechecker which only controls the
+		 * given date
+		 * @param expirationDate is the date to be checked
+		 */
+<span class="fc" id="L66">		public ActionTimeChecker(Date expirationDate) {</span>
+<span class="fc" id="L67">			super(new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L68">			this.getExpirationDates().add(expirationDate);</span>
+<span class="fc" id="L69">		}</span>
+		
+		@Override
+		public void run() {
+<span class="fc bfc" id="L73" title="All 2 branches covered.">		while(!this.isEnded())</span>
+		{
+<span class="fc bfc" id="L75" title="All 2 branches covered.">			for(int i = 0;i&lt;this.getExpirationDates().size();i++)</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">				if(this.getExpirationDates().get(i).before(new Date()))</span>
+				{
+<span class="fc" id="L78">					int focus = viewProxy.getFocusedPlayer();</span>
+<span class="fc" id="L79">					viewProxy.changeFocus(-1);</span>
+<span class="fc" id="L80">					viewProxy.update(new VectorPacket&lt;Interaction&gt;(new DisplayInteraction&lt;String&gt;(&quot;The client timeout for replying to the action is over.&quot;),&quot;Disconnection&quot;,0,focus));</span>
+<span class="fc" id="L81">					this.kill();</span>
+<span class="fc" id="L82">					return;</span>
+				}
+			try {
+<span class="fc" id="L85">				Thread.sleep(1000);</span>
+<span class="pc" id="L86">			} catch (InterruptedException e) {</span>
+<span class="nc" id="L87">				currentlyExecutingAction.getModel().getLogger().log(e, &quot;Failure in Action timeout checker&quot;);</span>
+			}		
+			
+			} 
+<span class="fc" id="L91">		}</span>
+		
+		@Override
+		public void kill(){
+<span class="fc" id="L95">			super.kill();</span>
+<span class="fc" id="L96">			this.getExpirationDates().clear();</span>
+<span class="fc" id="L97">		}</span>
+	}
+	
+	/**
+	 * Constructor for the action controller
+	 * @param actionTimer the amount of millisecond to wait before kicking a lazy user
+	 */
+<span class="fc" id="L104">	public ActionController(int actionTimer){</span>
+<span class="fc" id="L105">		this.actionTimer = actionTimer;</span>
+<span class="fc" id="L106">	}</span>
+	
+	/**
+	 * This function sets the viewProxy of the server 
+	 * @param viewProxy is the viewProxy that we want to use for this specific Controller
+	 */
+	public void setViewProxy(ViewProxy viewProxy){
+<span class="fc" id="L113">		this.viewProxy = viewProxy;</span>
+<span class="fc" id="L114">	}</span>
+
+	@Override
+	public void update() {
+<span class="fc" id="L118">		this.timer.kill();</span>
+<span class="fc" id="L119">	}</span>
+
+	/**
+	 * This packet is the one containing the new Action to be performed
+	 * coming from the model. When this method is called the controller starts
+	 * going through the different interactions of the action asking the player to fill them
+	 */
+	@Override
+	public void update(UnserializedVectorPacket&lt;Action&gt; change) {
+<span class="fc" id="L128">		Action c = change.getContent();</span>
+<span class="fc" id="L129">		this.viewProxy.changeFocus(change.getDestination());</span>
+<span class="fc" id="L130">		this.currentlyExecutingAction = c;</span>
+<span class="fc" id="L131">		this.currentPacketType = change.getType();</span>
+<span class="fc" id="L132">		this.start(&quot;Action&quot;.equals(change.getType()));</span>
+<span class="fc" id="L133">	}</span>
+
+	/**
+	 * this method is exposed to the viewProxy to be able to send back the Interaction once
+	 * that it has been filled. If the interaction which is given back is not correct the 
+	 * controller asks again the view for the same interaction
+	 * @param filledInteraction is the interaction correctly filled
+	 */
+	public void sendReply(Interaction filledInteraction) {
+		//We must check that the interaction returned is the one that we were waiting for
+<span class="nc" id="L143">		this.timer.kill();</span>
+<span class="nc" id="L144">		this.currentlyExecutingAction.sendReply(filledInteraction);</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if(this.currentlyExecutingAction.hasNext())</span>
+		{
+<span class="nc" id="L147">				this.viewProxy.sendToFocusedPlayer(this.currentlyExecutingAction.next(),this.currentPacketType);</span>
+<span class="nc" id="L148">				countDown();</span>
+<span class="nc" id="L149">		}</span>
+		else {
+<span class="nc" id="L151">			this.notifyObservers(currentlyExecutingAction);</span>
+		}
+<span class="nc" id="L153">	}</span>
+
+	private void countDown(){
+<span class="fc" id="L156">		this.timer = new ActionTimeChecker(new Date(System.currentTimeMillis()+actionTimer));</span>
+<span class="fc" id="L157">		Thread t = new Thread(timer);</span>
+<span class="fc" id="L158">		t.start();</span>
+<span class="fc" id="L159">	}</span>
+	
+	/**
+	 * @return the ViewProxy used by this controller to communicate with its views
+	 */
+	public Observer&lt;VectorPacket&lt;Interaction&gt;&gt; getViewProxy() {
+<span class="fc" id="L165">		return this.viewProxy;</span>
+	}
+
+	/**
+	 * This method just initiate the controller's work of defining all the 
+	 * interactions of the action
+	 */
+	public void start(boolean timerStarting) {
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">		if (currentlyExecutingAction.hasNext())</span>
+		{
+<span class="fc" id="L175">			viewProxy.sendToFocusedPlayer(this.currentlyExecutingAction.getInteraction(0),this.currentPacketType);</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">			if(timerStarting)</span>
+<span class="fc" id="L177">				countDown();</span>
+<span class="fc" id="L178">		}</span>
+		else
+<span class="nc" id="L180">			this.notifyObservers(currentlyExecutingAction);</span>
+<span class="fc" id="L181">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

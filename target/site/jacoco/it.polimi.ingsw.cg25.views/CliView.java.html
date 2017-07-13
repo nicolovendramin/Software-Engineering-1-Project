@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CliView.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.views</a> &gt; <span class="el_source">CliView.java</span></div><h1>CliView.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.views;
+import it.polimi.ingsw.cg25.actions.Interaction;
+import it.polimi.ingsw.cg25.communication.Packet;
+import it.polimi.ingsw.cg25.communication.VectorPacket;
+import it.polimi.ingsw.cg25.observer.Observable;
+import it.polimi.ingsw.cg25.observer.Observer;
+
+public class CliView extends Observable&lt;VectorPacket&lt;Interaction&gt;&gt; implements View, Observer&lt;Packet&lt;Interaction&gt;&gt;{
+
+	private final int myId;
+	private Interaction myActionInteraction;
+	
+<span class="nc" id="L13">	public CliView(int id){</span>
+<span class="nc" id="L14">		this.myId = id;</span>
+<span class="nc" id="L15">	}</span>
+	
+	public void input(String s) {
+<span class="nc" id="L18">		String[] splitted = s.split(&quot;:&quot;)[1].split(&quot;]&quot;);</span>
+<span class="nc bnc" id="L19" title="All 2 branches missed.">		if(splitted[0].equals(&quot;[Action&quot;))</span>
+		{
+<span class="nc bnc" id="L21" title="All 2 branches missed.">			if(myActionInteraction == null) </span>
+<span class="nc" id="L22">				System.out.println(&quot;not your turn baby&quot;);</span>
+			else 
+				try{
+<span class="nc" id="L25">					myActionInteraction.registerReply(splitted[1]);</span>
+<span class="nc" id="L26">					this.notifyObservers(new VectorPacket&lt;Interaction&gt;(myActionInteraction,&quot;Action&quot;,0,this.myId));</span>
+<span class="nc" id="L27">				}catch(Exception e){</span>
+<span class="nc" id="L28">					System.out.println(e.getMessage());</span>
+<span class="nc" id="L29">				}</span>
+		}
+<span class="nc" id="L31">	}</span>
+
+	@Override
+	public void update() {
+		// TODO Auto-generated method stub
+		
+<span class="nc" id="L37">	}</span>
+
+	@Override
+	public void update(Packet&lt;Interaction&gt; change) {
+		try{
+<span class="nc" id="L42">			Interaction toBeChecked = change.getContent(this.myId);</span>
+<span class="nc" id="L43">			myActionInteraction = toBeChecked;</span>
+<span class="nc" id="L44">			System.out.println(Integer.toString(myId) + &quot;[&quot;.concat(change.getType()).concat(&quot;]&quot;).concat(myActionInteraction.printOptions()));</span>
+<span class="nc" id="L45">		}catch(IllegalAccessException e){</span>
+			//means that I was not meant to read the message
+<span class="nc" id="L47">		}</span>
+<span class="nc" id="L48">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

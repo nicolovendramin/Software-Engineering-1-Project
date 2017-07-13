@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>GraphParser.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.parsing</a> &gt; <span class="el_source">GraphParser.java</span></div><h1>GraphParser.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.parsing;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.jgrapht.UndirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
+
+import it.polimi.ingsw.cg25.model.dashboard.topological.City;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+public class GraphParser implements Parser {
+
+	/**
+	 * List of cities to use as nodes
+	 */
+	private final List&lt;City&gt; cities;
+	/**
+	 * The undirected graph created by the parser
+	 */
+	private final UndirectedGraph&lt;City, DefaultEdge&gt; roadNetwork;
+	
+	/**
+	 * GraphParser class constructor
+	 * @param cities the cities used as nodes
+	 */
+<span class="fc" id="L35">	public GraphParser(List&lt;City&gt; cities) {</span>
+<span class="fc" id="L36">		this.cities = cities;</span>
+<span class="fc" id="L37">		roadNetwork = new SimpleGraph&lt;&gt;(DefaultEdge.class);</span>
+<span class="fc" id="L38">	}</span>
+	
+	@Override
+	public void parseLineByLine(InputStreamReader inStrRdr) throws IOException {
+<span class="fc" id="L42">		BufferedReader br = new BufferedReader(inStrRdr);</span>
+		String line;
+		
+		//Aggiungi tutte le città come nodi del grafo
+<span class="fc bfc" id="L46" title="All 2 branches covered.">		for(City c : cities) {</span>
+<span class="fc" id="L47">			roadNetwork.addVertex(c);</span>
+<span class="fc" id="L48">		}</span>
+		
+		//Crea i collegamenti
+<span class="fc bfc" id="L51" title="All 2 branches covered.">		while((line = br.readLine()) != null) {</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">			if(!(line.startsWith(&quot;#&quot;))) {</span>
+				//Elimino il terminatore
+<span class="fc" id="L54">				String newLine = line.replaceAll(&quot;;&quot;, &quot;&quot;);</span>
+				//Array dei due vertici del collegamento
+<span class="fc" id="L56">				String[] vertex = newLine.split(&quot;,&quot;);</span>
+				try {
+<span class="fc" id="L58">					roadNetwork.addEdge(cityFromName(vertex[0]), cityFromName(vertex[1]));</span>
+				} 
+<span class="nc" id="L60">				catch (Exception e) {</span>
+<span class="nc" id="L61">					e.printStackTrace();</span>
+<span class="fc" id="L62">				}</span>
+<span class="fc" id="L63">			}</span>
+		}
+
+<span class="fc" id="L66">	}</span>
+
+	/**
+	 * The method return a city from its name
+	 * @param name the name of the city
+	 * @return a City object
+	 * @throws Exception if the collection of cities does not contain the specified one
+	 */
+	private City cityFromName(String name) {
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">		for (int i = 0; i &lt; this.cities.size(); i++) {</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">			if (this.cities.get(i).getName().equals(name.replaceAll(&quot; &quot;,&quot;&quot;)))</span>
+<span class="fc" id="L77">				return this.cities.get(i);</span>
+		}
+<span class="nc" id="L79">		throw new NoSuchElementException(&quot;the city &quot;.concat(name).concat(&quot; is not in the cities&quot;).concat(cities.toString()));</span>
+	}
+	
+	/**
+	 * @return an undirected graph with all the specified connections among the cities
+	 */
+	public UndirectedGraph&lt;City, DefaultEdge&gt; getRoadNetwork() {
+<span class="fc" id="L86">		return roadNetwork;</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

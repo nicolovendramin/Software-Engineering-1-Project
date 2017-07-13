@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RMIServer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.servers</a> &gt; <span class="el_source">RMIServer.java</span></div><h1>RMIServer.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.servers;
+
+import java.rmi.AlreadyBoundException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.Date;
+import it.polimi.ingsw.cg25.views.RMIView;
+import it.polimi.ingsw.cg25.actions.Interaction;
+import it.polimi.ingsw.cg25.communication.Packet;
+import it.polimi.ingsw.cg25.gamegenerics.GameLogger;
+import it.polimi.ingsw.cg25.views.RMIViewRemote;
+/**
+ * 
+ * @author nicolo
+ *
+ */
+public class RMIServer implements Runnable, RMIServerInterface {
+
+	/**
+	 * The server port
+	 */
+	private final int port;
+	/**
+	 * The reference to the server
+	 */
+	private ServerCD4 server;
+	/**
+	 * The reference to the registry on which the rmi server is published
+	 */
+	private final Registry registry;
+	/**
+	 * The logger for the exceptions
+	 */
+	private GameLogger logger;
+
+	/**
+	 * Creates an RMIServer
+	 * @param port is the port where to publish the server
+	 * @param logger is the reference to the logger to be used to log exceptions
+	 * @param server is the reference to the server for which the rmi antenna works
+	 * @throws RemoteException if there are problems locating the registry on the specified port
+	 */
+<span class="nc" id="L46">	public RMIServer(int port, GameLogger logger,ServerCD4 server) throws RemoteException {</span>
+<span class="nc" id="L47">		this.logger = logger;</span>
+<span class="nc" id="L48">		this.port = port;</span>
+<span class="nc" id="L49">		this.server = server;</span>
+<span class="nc" id="L50">		registry = LocateRegistry.createRegistry(port);</span>
+<span class="nc" id="L51">	}</span>
+
+	@Override
+	public void run() {
+		try {
+<span class="nc" id="L56">			RMIServerInterface gameRemote = (RMIServerInterface) UnicastRemoteObject.exportObject(this, port);</span>
+<span class="nc" id="L57">			registry.bind(&quot;CD4&quot;, gameRemote);</span>
+<span class="nc" id="L58">			System.out.println(&quot;The RMIServer is now published on the registry waiting for connections on port &quot; + this.port);</span>
+<span class="nc" id="L59">			logger.log(&quot;The RMIServer is now published on the registry (port &quot;+this.port+&quot;)&quot;);</span>
+<span class="nc" id="L60">		} catch (RemoteException e) {</span>
+<span class="nc" id="L61">			logger.log(e,&quot;The start of the RMI connection has experienced some problem. Restart the Server, possibly using another RMI port&quot;);</span>
+<span class="nc" id="L62">			System.out.println(</span>
+<span class="nc" id="L63">					&quot;The start of the RMI connection has experienced some problem. Restart the Server, possibly using another RMI port&quot;);</span>
+<span class="nc" id="L64">		} catch (AlreadyBoundException e) {</span>
+<span class="nc" id="L65">			logger.log(e);</span>
+		}
+
+<span class="nc" id="L68">	}</span>
+
+	/**
+	 * Closes the server and unbinds it from the registry
+	 */
+	public void kill() {
+		try {
+<span class="nc" id="L75">			this.registry.unbind(&quot;CD4&quot;);</span>
+<span class="nc" id="L76">		} catch (RemoteException | NotBoundException e) {</span>
+<span class="nc" id="L77">			logger.log(e);</span>
+		}
+<span class="nc" id="L79">	}</span>
+
+	@Override
+	public RMIViewRemote connectToRmi(RMIViewRemote client) throws RemoteException {
+<span class="nc" id="L83">		RMIView&lt;Packet&lt;Interaction&gt;&gt; view = new RMIView&lt;&gt;(0,client);</span>
+<span class="nc" id="L84">		System.out.println(new Date() + &quot; Client accepted for RMI connection&quot;);</span>
+<span class="nc" id="L85">		logger.log(&quot;Client accepted for RMI connection&quot;);</span>
+<span class="nc" id="L86">		return server.connect(view);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

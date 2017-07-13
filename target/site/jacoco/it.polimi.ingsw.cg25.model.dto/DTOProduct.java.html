@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>DTOProduct.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.model.dto</a> &gt; <span class="el_source">DTOProduct.java</span></div><h1>DTOProduct.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.model.dto;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import it.polimi.ingsw.cg25.exceptions.ElementNotFoundException;
+import it.polimi.ingsw.cg25.model.trade.Product;
+import it.polimi.ingsw.cg25.model.trade.ProductBonus;
+import it.polimi.ingsw.cg25.model.trade.ProductPermitCard;
+import it.polimi.ingsw.cg25.model.trade.ProductPoliticsCard;
+import it.polimi.ingsw.cg25.model.trade.Sellable;
+
+public abstract class DTOProduct&lt;T extends DTOSellable&gt; implements DTO {
+
+	/**
+	 * Serial number for serial communication
+	 */
+	private static final long serialVersionUID = 8168423406926931295L;
+	/**
+	 * The price of the DTO product
+	 */
+	final private int price;
+	/**
+	 * The DTO player who is the owner of the product and wants to sell it
+	 */
+	final private DTOPlayerCD4 owner;
+	
+	final private List&lt;T&gt; itemsToSell;
+	
+<span class="nc" id="L30">	public DTOProduct(int price, DTOPlayerCD4 owner, List&lt;T&gt; itemsToSell) {</span>
+<span class="nc" id="L31">		this.price = price;</span>
+<span class="nc" id="L32">		this.owner = owner;</span>
+<span class="nc" id="L33">		this.itemsToSell = itemsToSell;</span>
+<span class="nc" id="L34">	}</span>
+	
+	private static DTOProduct&lt;? extends DTOSellable&gt; map(Product&lt;? extends Sellable&gt; product) {
+<span class="nc bnc" id="L37" title="All 2 branches missed.">		if(product instanceof ProductBonus)</span>
+<span class="nc" id="L38">			return new DTOProductBonus((ProductBonus) product);</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">		if(product instanceof ProductPermitCard)</span>
+<span class="nc" id="L40">			return new DTOProductPermit((ProductPermitCard) product);</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		if(product instanceof ProductPoliticsCard)</span>
+<span class="nc" id="L42">			return new DTOProductPoliticsCard((ProductPoliticsCard) product);</span>
+<span class="nc" id="L43">		throw new IllegalArgumentException();</span>
+	}
+	
+	public static DTOProduct&lt;? extends DTOSellable&gt; convert(Product&lt;? extends Sellable&gt; toConvert) {
+<span class="nc" id="L47">		DTOProduct&lt;? extends DTOSellable&gt; converted = DTOProduct.map(toConvert);</span>
+<span class="nc" id="L48">		return converted;</span>
+	}
+	
+	public static List&lt;DTOProduct&lt;? extends DTOSellable&gt;&gt; convertAll(List&lt;Product&lt;? extends Sellable&gt;&gt; toConvert) {
+<span class="nc" id="L52">		List&lt;DTOProduct&lt;? extends DTOSellable&gt;&gt; converted = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L53">		toConvert.forEach(p -&gt; converted.add(DTOProduct.convert(p)));</span>
+		
+<span class="nc" id="L55">		return converted;</span>
+	}
+
+	@Override
+	public int hashCode() {
+<span class="nc" id="L60">		final int prime = 31;</span>
+<span class="nc" id="L61">		int result = 1;</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		result = prime * result + ((itemsToSell == null) ? 0 : itemsToSell.hashCode());</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		result = prime * result + ((owner == null) ? 0 : owner.hashCode());</span>
+<span class="nc" id="L64">		result = prime * result + price;</span>
+<span class="nc" id="L65">		return result;</span>
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if(obj == null)</span>
+<span class="nc" id="L71">			return false;</span>
+		//Se obj è un DTOProduct...
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if(obj instanceof DTOProductBonus) {</span>
+<span class="nc" id="L74">			DTOProductBonus converted = (DTOProductBonus)obj;</span>
+<span class="nc bnc" id="L75" title="All 4 branches missed.">			return this.getClass() == DTOProductBonus.class &amp;&amp; this.price == converted.getPrice() &amp;&amp;</span>
+<span class="nc bnc" id="L76" title="All 4 branches missed.">					this.owner.equals(converted.getOwner()) &amp;&amp; this.itemsToSell.equals(converted.getItemsToSell());</span>
+		}
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		else if(obj instanceof DTOProductPermit) {</span>
+<span class="nc" id="L79">			DTOProductPermit converted = (DTOProductPermit)obj;</span>
+<span class="nc bnc" id="L80" title="All 4 branches missed.">			return this.getClass() == DTOProductPermit.class &amp;&amp; this.price == converted.getPrice() &amp;&amp;</span>
+<span class="nc bnc" id="L81" title="All 4 branches missed.">					this.owner.equals(converted.getOwner()) &amp;&amp; this.itemsToSell.equals(converted.getItemsToSell());</span>
+		}
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		else if(obj instanceof DTOProductPoliticsCard) {</span>
+<span class="nc" id="L84">			DTOProductPoliticsCard converted = (DTOProductPoliticsCard)obj;</span>
+<span class="nc bnc" id="L85" title="All 4 branches missed.">			return this.getClass() == DTOProductPoliticsCard.class &amp;&amp; this.price == converted.getPrice() &amp;&amp;</span>
+<span class="nc bnc" id="L86" title="All 4 branches missed.">					this.owner.equals(converted.getOwner()) &amp;&amp; this.itemsToSell.equals(converted.getItemsToSell());</span>
+		}
+		//Se obj è un Product...
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		else if(obj instanceof ProductBonus) {</span>
+<span class="nc" id="L90">			ProductBonus converted = (ProductBonus)obj;</span>
+<span class="nc bnc" id="L91" title="All 4 branches missed.">			return this.price == converted.getPrice() &amp;&amp; this.owner.equals(converted.getOwner()) &amp;&amp;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">					this.itemsToSell.equals(converted.getContent());</span>
+		}
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		else if(obj instanceof ProductPermitCard) {</span>
+<span class="nc" id="L95">			ProductPermitCard converted = (ProductPermitCard)obj;</span>
+<span class="nc bnc" id="L96" title="All 4 branches missed.">			return this.price == converted.getPrice() &amp;&amp; this.owner.equals(converted.getOwner()) &amp;&amp;</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">					this.itemsToSell.equals(converted.getContent());</span>
+		}
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		else if(obj instanceof ProductPoliticsCard) {</span>
+<span class="nc" id="L100">			ProductPoliticsCard converted = (ProductPoliticsCard)obj;</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">			return this.price == converted.getPrice() &amp;&amp; this.owner.equals(converted.getOwner()) &amp;&amp;</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">					this.itemsToSell.equals(converted.getContent());</span>
+		}
+<span class="nc" id="L104">		return false;</span>
+	}
+	
+	public Product&lt;? extends Sellable&gt; decode(List&lt;Product&lt;? extends Sellable&gt;&gt; candidates) throws ElementNotFoundException {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		for(Product&lt;? extends Sellable&gt; p : candidates)</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">			if(this.equals(p))</span>
+<span class="nc" id="L110">				return p;</span>
+<span class="nc" id="L111">		throw new ElementNotFoundException();</span>
+	}
+	
+	public static List&lt;Product&lt;? extends Sellable&gt;&gt; decodeAll(List&lt;DTOProduct&lt;? extends DTOSellable&gt;&gt; toDecode, 
+			List&lt;Product&lt;? extends Sellable&gt;&gt; candidates) throws ElementNotFoundException {
+		
+<span class="nc" id="L117">		List&lt;DTOProduct&lt;? extends DTOSellable&gt;&gt; toDecodeCopy = new ArrayList&lt;&gt;(toDecode);</span>
+<span class="nc" id="L118">		List&lt;Product&lt;? extends Sellable&gt;&gt; decoded = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L119">		List&lt;Product&lt;? extends Sellable&gt;&gt; candidateCopy = new ArrayList&lt;&gt;(candidates);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		for(DTOProduct&lt;? extends DTOSellable&gt; dc : toDecodeCopy){</span>
+<span class="nc" id="L121">			Product&lt;? extends Sellable&gt; temp = dc.decode(candidateCopy);</span>
+<span class="nc" id="L122">			decoded.add(temp);</span>
+<span class="nc" id="L123">			candidateCopy.remove(temp);</span>
+<span class="nc" id="L124">			}</span>
+<span class="nc" id="L125">		return decoded;</span>
+	}
+
+	public int getPrice() {
+<span class="nc" id="L129">		return price;</span>
+	}
+
+	public DTOPlayerCD4 getOwner() {
+<span class="nc" id="L133">		return owner;</span>
+	}
+
+	public List&lt;T&gt; getItemsToSell() {
+<span class="nc" id="L137">		return itemsToSell;</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

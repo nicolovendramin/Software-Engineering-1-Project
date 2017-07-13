@@ -1,0 +1,21 @@
+#the lines specify the edges between cities
+#the sintax is: city1, city2
+#where city1 and city2 are two vertexes
+Arkon,Castrum;
+Castrum,Dorful;
+Burgen,Esti;
+Castrum,Framek;
+Dorful,Graden;
+Esti,Hellar;
+Framek,Indur;
+Framek,Graden;
+Graden,Juvelar;
+Graden,Hellar;
+Hellar,Juvelar;
+Indur,Kultos;
+Juvelar,Lyram;
+Juvelar,Merkatim;
+Kultos,Naris;
+Lyram,Osium;
+Merkatim,Osium;
+Naris,Osium;

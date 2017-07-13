@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>BalconyPanel.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.gui</a> &gt; <span class="el_source">BalconyPanel.java</span></div><h1>BalconyPanel.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.gui;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Image;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
+
+import it.polimi.ingsw.cg25.model.dto.DTOCouncelor;
+import it.polimi.ingsw.cg25.model.dto.DTOCouncil;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+@SuppressWarnings(&quot;serial&quot;)
+public class BalconyPanel extends JLayeredPane implements Updatable&lt;DTOCouncil&gt; {
+
+	/**
+	 * The width of the balcony
+	 */
+	private static final int BAL_WIDTH = 140;
+	/**
+	 * The height of the balcony
+	 */
+	private static final int BAL_HEIGHT = 44;
+	/**
+	 * The space between councelors
+	 */
+	private static final int COUN_SPACING = 25;
+	/**
+	 * The image of the balcony
+	 */
+	private Image balcony;
+	/**
+	 * The List of labels which represent councelors
+	 */
+	private final List&lt;Councelor&gt; councelors;
+	
+	/**
+	 * BalconyPanel class constructor without title and font
+	 * @param x the horizontal position of the panel
+	 * @param y the vertical position of the panel
+	 * @param w the width of the panel
+	 * @param h the height of the panel
+	 * @throws IOException if a problem occures while loading digital resources
+	 */
+	public BalconyPanel(int x, int y, int w, int h) throws IOException {
+<span class="nc" id="L58">		this(x, y, w, h, 42, null, null);</span>
+<span class="nc" id="L59">	}</span>
+	
+	/**
+	 * BalconyPanel class constructor
+	 * @param x the horizontal position of the panel
+	 * @param y the vertical position of the panel
+	 * @param w the width of the panel
+	 * @param h the height of the panel
+	 * @param sideDistance the horizontal position of the balcony label in the panel
+	 * @param title the title given to the balcony label in the panel
+	 * @param font the font to be used
+	 * @throws IOException if something goes wront while loading digital resources
+	 */
+<span class="nc" id="L72">	public BalconyPanel(int x, int y, int w, int h, int sideDistance, String title, Font font) throws IOException {</span>
+<span class="nc" id="L73">		this.setLayout(null);</span>
+<span class="nc" id="L74">		int p = 45;</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		if(title==null) </span>
+<span class="nc" id="L76">			p = 0;</span>
+<span class="nc" id="L77">		this.setBounds(x, y, w, h+p);</span>
+<span class="nc" id="L78">		this.setOpaque(false);</span>
+<span class="nc" id="L79">		loadResources();</span>
+		
+<span class="nc" id="L81">		Image balconyIcon = balcony.getScaledInstance(BAL_WIDTH, BAL_HEIGHT, Image.SCALE_SMOOTH);</span>
+		
+<span class="nc" id="L83">		JLabel bal = new JLabel();</span>
+<span class="nc" id="L84">		bal.setBounds(sideDistance, 30, BAL_WIDTH, BAL_HEIGHT+p);</span>
+<span class="nc" id="L85">		bal.setIcon(new ImageIcon(balconyIcon));</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if(p!=0){</span>
+<span class="nc" id="L87">			bal.setText(title);</span>
+<span class="nc" id="L88">			bal.setVerticalTextPosition(JLabel.BOTTOM);</span>
+<span class="nc" id="L89">			bal.setHorizontalTextPosition(JLabel.CENTER);</span>
+<span class="nc" id="L90">			this.setFont(new Font(font.getFontName(), Font.PLAIN, 18));</span>
+<span class="nc" id="L91">			this.setForeground(Color.BLACK);</span>
+<span class="nc" id="L92">			this.setLayer(bal, 2);</span>
+		}
+<span class="nc" id="L94">		this.add(bal);</span>
+		
+<span class="nc" id="L96">		councelors = new ArrayList&lt;&gt;();</span>
+		
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		for (int i = 0; i &lt; 4; i++) {</span>
+<span class="nc" id="L99">			Councelor c = new Councelor(sideDistance+20 + i*COUN_SPACING,0);</span>
+<span class="nc" id="L100">			councelors.add(c);</span>
+<span class="nc" id="L101">			c.setBounds(c.getX(), c.getY()+p/3, c.getWidth(), c.getHeight());</span>
+<span class="nc" id="L102">			this.add(c);</span>
+<span class="nc" id="L103">			this.setLayer(c, 10);</span>
+		}
+<span class="nc" id="L105">	}</span>
+	
+	/**
+	 * This method is used to load digital resources used within this class
+	 * @throws IOException if something goes wrong while loading
+	 */
+	private void loadResources() throws IOException {
+<span class="nc" id="L112">		balcony = ImageIO.read(new File(&quot;src/main/resources/balcony.png&quot;));</span>
+<span class="nc" id="L113">	}</span>
+
+	@Override
+	public void update(DTOCouncil object) {
+<span class="nc" id="L117">		List&lt;DTOCouncelor&gt; invertedCoun = new ArrayList&lt;&gt;(object.getCouncelors());</span>
+		//Inverti consiglieri
+<span class="nc" id="L119">		Collections.reverse(invertedCoun);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		for(int i = 0; i &lt; this.councelors.size(); i++) {</span>
+<span class="nc" id="L121">			this.councelors.get(i).setColor(invertedCoun.get(i).getColor());</span>
+		}
+<span class="nc" id="L123">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

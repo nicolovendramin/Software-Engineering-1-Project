@@ -1,0 +1,21 @@
+#The lines specify the edges between cities
+#The sintax is: city1, city2
+#where city1 and city2 are two vertexes
+Paris,Copenaghen;
+Copenaghen,Zagreb;
+Kiev,Helsinki;
+Copenaghen,London;
+Zagreb,Rome;
+Helsinki,Stockholm;
+London,Oslo;
+London,Rome;
+Rome,Oslo;
+Rome,Stockholm;
+Stockholm,Berlin;
+Oslo,Madrid;
+Berlin,Dublin;
+Berlin,Nicosia;
+Madrid,Wien;
+Dublin,Athens;
+Nicosia,Athens;
+Wien,Athens;

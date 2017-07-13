@@ -1,0 +1,56 @@
+#The first line specifies the number of regions
+#The following lines are one region followed by all its permit cards
+#The sintax of the region's line is:
+#type of region | number of faced up permits | the name of the cities | bonuses associated to that region
+numberOfRegions,3;
+Sea|2|Arkon,Castrum,Burgen,Dorful,Esti|VictoryPointBonus,5;
+numberOfPermits,15;
+Dorful,Esti|VictoryPointBonus,3|AssistantBonus,1;
+Arkon,Burgen|CoinBonus,3|DrawPoliticsCardBonus,1;
+Burgen,Castrum|VictoryPointBonus,3|CoinBonus,3;
+Arkon|VictoryPointBonus,4|CoinBonus,3;
+Burgen|DrawPoliticsCardBonus,3|AssistantBonus,1;
+Castrum,Dorful,Esti|DrawPoliticsCardBonus,1|NobilityPointBonus,1;
+Dorful|VictoryPointBonus,7;
+Arkon,Burgen,Castrum|AssistantBonus,2;
+Burgen,Castrum,Dorful|AssistantBonus,1|VictoryPointBonus,1;
+Arkon,Burgen,Esti|CoinBonus,3;
+Arkon,Dorful,Esti|CoinBonus,1|VictoryPointBonus,2;
+Arkon,Esti|NobilityPointBonus,2;
+Castrum,Dorful|VictoryPointBonus,3|AssistantBonus,1;
+Esti|MainActionBonus,1|CoinBonus,2;
+Castrum|AssistantBonus,2|CoinBonus,3;
+Hill|2|Framek,Indur,Graden,Juvelar,Hellar|VictoryPointBonus,5;
+numberOfPermits,15;
+Indur,Juvelar,Hellar|DrawPoliticsCardBonus,2;
+Framek,Juvelar|AssistantBonus,2|CoinBonus,1;
+Framek,Graden,Juvelar|CoinBonus,2|VictoryPointBonus,1;
+Graden|AssistantBonus,2|NobilityPointBonus,1|VictoryPointBonus,2;
+Framek|DrawPoliticsCardBonus,2|CoinBonus,4;
+Graden,Hellar,Indur|DrawPoliticsCardBonus,1|AssistantBonus,1;
+Juvelar|MainActionBonus,1|VictoryPointBonus,2;
+Hellar,Indur|VictoryPointBonus,5;
+Framek,Graden|CoinBonus,5;
+Indur|DrawPoliticsCardBonus,2|AssistantBonus,2;
+Hellar|AssistantBonus,4;
+Juvelar,Indur|DrawPoliticsCardBonus,2|NobilityPointBonus,1;
+Hellar,Graden|AssistantBonus,3;
+Framek,Graden,Hellar|CoinBonus,1|NobilityPointBonus,1;
+Framek,Juvelar,Indur|NobilityPointBonus,1|AssistantBonus,1;
+Mountain|2|Kultos,Naris,Lyram,Osium,Merkatim|VictoryPointBonus,5;
+numberOfPermits,15;
+Merkatim,Naris|MainActionBonus,1;
+Merkatim|VictoryPointBonus,5|NobilityPointBonus,1;
+Osium,Kultos|DrawPoliticsCardBonus,2|NobilityPointBonus,1;
+Kultos,Lyram,Merkatim|AssistantBonus,1|CoinBonus,1;
+Naris|CoinBonus,7;
+Kultos,Naris,Osium|DrawPoliticsCardBonus,1|VictoryPointBonus,1;
+Lyram|CoinBonus,1|AssistantBonus,3;
+Osium|DrawPoliticsCardBonus,3|NobilityPointBonus,1;
+Kultos,Lyram,Osium|DrawPoliticsCardBonus,1|CoinBonus,1;
+Kultos|DrawPoliticsCardBonus,4;
+Merkatim,Lyram|DrawPoliticsCardBonus,3;
+Naris,Osium|VictoryPointBonus,2|DrawPoliticsCardBonus,2;
+Merkatim,Naris,Osium|NobilityPointBonus,1|VictoryPointBonus,1;
+Lyram,Merkatim,Naris|VictoryPointBonus,3;
+Kultos,Lyram|DrawPoliticsCardBonus,1|AssistantBonus,2;

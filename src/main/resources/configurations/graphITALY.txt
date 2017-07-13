@@ -1,0 +1,21 @@
+#The lines specify the edges between cities
+#The sintax is: city1, city2
+#where city1 and city2 are two vertexes
+Treviso,Parma;
+Parma,Bari;
+Empoli,Cagliari;
+Parma,Domodossola;
+Bari,Milano;
+Cagliari,Roma;
+Domodossola,Udine;
+Domodossola,Milano;
+Milano,Udine;
+Milano,Roma;
+Roma,Firenze;
+Udine,Venezia;
+Firenze,Olbia;
+Firenze,Aosta;
+Venezia,Latina;
+Olbia,Napoli;
+Aosta,Napoli;
+Latina,Napoli;

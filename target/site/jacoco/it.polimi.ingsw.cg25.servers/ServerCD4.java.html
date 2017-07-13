@@ -1,0 +1,685 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ServerCD4.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.servers</a> &gt; <span class="el_source">ServerCD4.java</span></div><h1>ServerCD4.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">package it.polimi.ingsw.cg25.servers;</span>
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.ConsoleHandler;
+
+import it.polimi.ingsw.cg25.views.RMIView;
+import it.polimi.ingsw.cg25.actions.Interaction;
+import it.polimi.ingsw.cg25.communication.Packet;
+import it.polimi.ingsw.cg25.communication.VectorPacket;
+import it.polimi.ingsw.cg25.exceptions.CannotCreateGameException;
+import it.polimi.ingsw.cg25.gamegenerics.GameLogger;
+import it.polimi.ingsw.cg25.model.BoardCD4;
+import it.polimi.ingsw.cg25.onlinegenerics.User;
+import it.polimi.ingsw.cg25.parsing.BoardFactory;
+import it.polimi.ingsw.cg25.views.SocketView;
+
+/**
+ * @author nicolo ;-)
+ *
+ */
+<span class="nc" id="L36">public class ServerCD4 {</span>
+
+	/**
+	 * The list of the active games
+	 */
+<span class="nc" id="L41">	private List&lt;GameCD4&gt; games = new ArrayList&lt;&gt;();</span>
+	/**
+	 * The list of the games that are waiting to start
+	 */
+<span class="nc" id="L45">	private List&lt;GameCD4&gt; pendingGames = new ArrayList&lt;&gt;();</span>
+	/**
+	 * The expiration dates of the pending games. At the i-th position
+	 * of this array is stored the expirqation date of the i-th pendingGame
+	 */
+<span class="nc" id="L50">	private List&lt;Date&gt; expirationDates = new ArrayList&lt;&gt;();</span>
+	/**
+	 * The thread used by the server to check if there are some pending games
+	 * to be closed
+	 */
+	private ServerTimeChecker serverTimeChecker;
+	/**
+	 * The number of millisecond to wait before kicking a game from the pending list 
+	 * if it can not start
+	 */
+<span class="nc" id="L60">	private final int gameSetUpTimeOut = 40000;</span>
+	/**
+	 * Minimum number of users to start the next game
+	 */
+<span class="nc" id="L64">	private int minUsers = 2;</span>
+	/**
+	 * Action timer for the next game
+	 */
+<span class="nc" id="L68">	private int actionTimer = 120000;</span>
+	/**
+	 * Max number of user for the next game
+	 */
+<span class="nc" id="L72">	private int maxUsers = 4;</span>
+	/**
+	 * The number of the port on which open the socket server
+	 */
+	private int socketPort;
+	/**
+	 * The number of the port on which open the RMI server
+	 */
+	private int rmiPort;
+	/**
+	 * The next id to be assigned to a view
+	 */
+<span class="nc" id="L84">	private int ids = 0;</span>
+	/**
+	 * The executor that is encharged of execute the different threads of the server
+	 */
+	private ExecutorService executor;
+	/**
+	 * The socket antenna of this server
+	 */
+	private SocketServer socketServer;
+	/**
+	 * The rmi antenna of this server
+	 */
+	private RMIServer rmiServer;
+	/**
+	 * The output stream writer
+	 */
+	private PrintWriter writer;
+	/**
+	 * The logger on which the server logs exceptions
+	 */
+	private GameLogger logger;
+	/**
+	 * The queue of boards to be used for the new games to start
+	 */
+	private Queue&lt;BoardCD4&gt; boardPool;
+	/**
+	 * The thread that checks if there is any active game to be closed because
+	 * it has ended
+	 */
+	private expiredGameChecker exipedGamesChecker;
+	/**
+	 * This flag is made to decide if the next game will have market or not
+	 */
+<span class="nc" id="L117">	private boolean hasMarket = true;</span>
+
+	/**
+	 * The number of emporiums to win for the next game
+	 */
+<span class="nc" id="L122">	private int numberOfEmporiumsToWin = 10;</span>
+	/**
+	 * 
+	 * @author nicolo
+	 *
+	 */
+<span class="nc" id="L128">	private class expiredGameChecker implements Runnable{</span>
+
+		/**
+		 * This flags is made to know if the thread must go on working or not
+		 */
+<span class="nc" id="L133">		private boolean end = false;</span>
+		
+		@Override
+		public void run() {
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		while(!end){	</span>
+<span class="nc" id="L138">			synchronized(games){</span>
+<span class="nc" id="L139">				List&lt;GameCD4&gt; toBeRemovedGames = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">				for(GameCD4 game : games){</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">					if(!game.isRunning()){</span>
+<span class="nc" id="L142">						toBeRemovedGames.add(game);</span>
+<span class="nc" id="L143">						game.close();</span>
+					}
+				}
+<span class="nc bnc" id="L146" title="All 2 branches missed.">				if(toBeRemovedGames.size()!=0){</span>
+<span class="nc" id="L147">					writer.println(Integer.toString(toBeRemovedGames.size()) + &quot; games have been removed from the list because it/they ended at least 5 min ago&quot;);</span>
+<span class="nc" id="L148">					writer.flush();</span>
+				}
+<span class="nc" id="L150">				games.removeAll(toBeRemovedGames);</span>
+			}
+			try {
+<span class="nc" id="L153">				Thread.sleep(10000);</span>
+<span class="nc" id="L154">			} catch (InterruptedException e) {</span>
+<span class="nc" id="L155">				logger.log(e);</span>
+<span class="nc" id="L156">				Thread.currentThread().interrupt();</span>
+			}
+			}
+		
+<span class="nc" id="L160">		}</span>
+		
+		/**
+		 * Kills this timechecker
+		 */
+		public void kill(){
+<span class="nc" id="L166">			this.end = true;</span>
+<span class="nc" id="L167">		}</span>
+	}
+	
+	/**
+	 * This class populates the board queue of some new boards
+	 * 
+	 * @author nicolo
+	 *
+	 */
+	private class BoardPoolPopulator implements Runnable {
+
+		/**
+		 * Stores the information relating how many boards this thread must create
+		 */
+		private int numberOfBoardsToAdd;
+		/**
+		 * counts the number of errors encountered while instantiating the boards
+		 */
+		private int errors;
+		private int i;
+		/**
+		 * The path where the configuration files are stored
+		 */
+<span class="nc" id="L190">		private String path = &quot;src/main/resources/configurations/&quot;;</span>
+		
+		/**
+		 * Simple constructor
+		 * @param numberOfBoardsToAdd is the number of boards that must be added to the board queue
+		 */
+<span class="nc" id="L196">		private BoardPoolPopulator(int numberOfBoardsToAdd){</span>
+<span class="nc" id="L197">			this.numberOfBoardsToAdd = numberOfBoardsToAdd;</span>
+<span class="nc" id="L198">		}</span>
+		
+		@Override
+		public void run() {
+<span class="nc bnc" id="L202" title="All 2 branches missed.">			for(int i=0;i&lt;numberOfBoardsToAdd;i++){</span>
+				try {
+<span class="nc" id="L204">					boardPool.add(generateRandomBoard());</span>
+<span class="nc" id="L205">				} catch (Exception e) {</span>
+<span class="nc" id="L206">					System.out.println(e.getMessage());</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">					if(errors&lt;5)</span>
+<span class="nc" id="L208">						numberOfBoardsToAdd++;</span>
+					else{
+<span class="nc" id="L210">						writer.println(&quot;Game initialization failed too many times. We suggest you to shut down the server and check the files&quot;);</span>
+<span class="nc" id="L211">						writer.flush();</span>
+					}
+				}
+			}
+			
+<span class="nc" id="L216">		}</span>
+		
+		/**
+		 * Generates a Random Board by submitting to the parser a consistent and partially random
+		 * set of files
+		 * @return a valid board
+ 		 * @throws Exception if the tool is not able to combine the files in a correct way
+		 */
+		public BoardCD4 generateRandomBoard() throws Exception{
+<span class="nc" id="L225">			String[] fileFilters = {&quot;nobilityCells&quot;,&quot;politics&quot;,&quot;cities&quot;,&quot;graph&quot;,&quot;king&quot;,&quot;regions&quot;};</span>
+<span class="nc" id="L226">			ArrayList&lt;String&gt; selected = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			for(i = 0; i&lt;fileFilters.length; i++) {</span>
+<span class="nc" id="L228">				String[] files = new File(path).list(new FilenameFilter() {</span>
+
+					@Override
+					public boolean accept(File dir, String name) {
+<span class="nc bnc" id="L232" title="All 4 branches missed.">						if(i&gt;=3 &amp;&amp; !selected.get(2).replace(&quot;cities&quot;, &quot;&quot;).equals(name.replace(fileFilters[i], &quot;&quot;)))</span>
+<span class="nc" id="L233">							return false;</span>
+<span class="nc bnc" id="L234" title="All 4 branches missed.">						if(!name.contains(fileFilters[i]) || !&quot;.txt&quot;.equals(name.substring(name.lastIndexOf(&quot;.&quot;))))</span>
+						{
+<span class="nc" id="L236">							return false;</span>
+						}
+						else
+<span class="nc" id="L239">							return true;</span>
+					}
+					
+				});
+<span class="nc" id="L243">				Random random = new Random(System.nanoTime());</span>
+<span class="nc" id="L244">				selected.add(files[Math.abs(random.nextInt(files.length))]);</span>
+			}
+			try {
+<span class="nc" id="L247">				BoardFactory factory = new BoardFactory(new FileReader(path.concat(selected.get(0))),</span>
+<span class="nc" id="L248">						new FileReader(path.concat(selected.get(1))),</span>
+<span class="nc" id="L249">						new FileReader(path.concat(selected.get(2))),</span>
+<span class="nc" id="L250">						new FileReader(path.concat(selected.get(3))),</span>
+<span class="nc" id="L251">						new FileReader(path.concat(selected.get(4))),</span>
+<span class="nc" id="L252">						new FileReader(path.concat(selected.get(5))));</span>
+<span class="nc" id="L253">				writer.println(&quot;A board has been added to the pool using the files &quot; + selected);</span>
+<span class="nc" id="L254">				writer.flush();</span>
+<span class="nc" id="L255">				return factory.getBoard();</span>
+<span class="nc" id="L256">			} catch (FileNotFoundException | CannotCreateGameException e) {</span>
+<span class="nc" id="L257">				writer.println(&quot;A problem occured with one of the configuration files in the directory&quot;);</span>
+<span class="nc" id="L258">				writer.flush();</span>
+<span class="nc" id="L259">				throw(e);</span>
+			}
+		
+		}
+	}
+	
+	/**
+	 * Launches a game of the pending game list
+	 * @param index the index in the list of pending games of the game to be launched
+	 * @throws IllegalArgumetnException if the index is out of the list or the game can not be launched
+	 */
+	public synchronized void launchGame(int index){
+		GameCD4 game;
+		try{
+<span class="nc" id="L273">			game = pendingGames.get(index);</span>
+<span class="nc" id="L274">		}catch(IndexOutOfBoundsException e){</span>
+<span class="nc" id="L275">			throw new IllegalArgumentException(e);</span>
+		}
+<span class="nc bnc" id="L277" title="All 2 branches missed.">		if(!game.canStart()) </span>
+<span class="nc" id="L278">			throw new IllegalArgumentException(&quot;The game cannot be started&quot;);</span>
+<span class="nc" id="L279">		System.out.println(&quot;Launching a game...&quot;);</span>
+<span class="nc" id="L280">		logger.log(&quot;Launching a game...&quot;);</span>
+<span class="nc" id="L281">		games.add(game);			</span>
+<span class="nc" id="L282">		pendingGames.remove(index);</span>
+<span class="nc" id="L283">		expirationDates.remove(index);</span>
+<span class="nc" id="L284">		Thread t = new Thread(game);</span>
+<span class="nc" id="L285">		t.setName(&quot;Game#&quot;+ids);</span>
+<span class="nc" id="L286">		t.start();</span>
+<span class="nc" id="L287">	}</span>
+	
+	/**
+	 * This is a routine needed to remove a game from the list of the pending games
+	 * @param index
+	 */
+	public synchronized void removePendingGame(int index){
+<span class="nc" id="L294">		pendingGames.get(index).close();</span>
+<span class="nc" id="L295">		pendingGames.remove(index);</span>
+<span class="nc" id="L296">		expirationDates.remove(index);</span>
+<span class="nc" id="L297">		System.out.println(&quot;The game have been removed from the pending game list because of timeout end&quot;);</span>
+<span class="nc" id="L298">	}</span>
+	
+	/**
+	 * This method is called to start one of the pending games
+	 * @param game is the game to be started
+	 * @throws IllegalArgumentException if the game is not in the list or can not be started
+	 */
+	public void launchGame(GameCD4 game){
+<span class="nc" id="L306">		launchGame(pendingGames.indexOf(game));</span>
+<span class="nc" id="L307">	}</span>
+	
+	/**
+	 * This method connects an Rmi view to the firstly available game running in the server
+	 * @param view the view that asked to be connected
+	 * @return the real view that has to be sent to the client to be used as a stub
+	 * @throws RemoteException when something goes wrong with RMI
+	 */
+	public synchronized RMIView&lt;Packet&lt;Interaction&gt;&gt; connect(RMIView&lt;Packet&lt;Interaction&gt;&gt; view) throws RemoteException {
+<span class="nc" id="L316">		this.ids ++;</span>
+<span class="nc" id="L317">		User user = new User(this.ids,&quot;User#&quot;.concat(Integer.toString(this.ids)));</span>
+<span class="nc" id="L318">		user.setStatus(true);</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">		if(pendingGames.isEmpty()) </span>
+		{
+<span class="nc" id="L321">			initGameList();</span>
+		}
+<span class="nc bnc" id="L323" title="All 2 branches missed.">		if(pendingGames.isEmpty())</span>
+<span class="nc" id="L324">			return null;</span>
+<span class="nc" id="L325">		GameCD4 game = pendingGames.get(0);</span>
+<span class="nc" id="L326">		game.addUser(user);</span>
+<span class="nc bnc" id="L327" title="All 4 branches missed.">		if(game.canStart() &amp;&amp; expirationDates.get(0).after(new Date(System.currentTimeMillis()+20000)))</span>
+		{
+<span class="nc" id="L329">			Date d = expirationDates.get(0);</span>
+<span class="nc" id="L330">			expirationDates.add(0,new Date(System.currentTimeMillis()+20000));</span>
+<span class="nc" id="L331">			expirationDates.remove(d);</span>
+<span class="nc" id="L332">			writer.println(&quot;A game has reached the minimum number of players to start. Launching in 20 sec&quot;);</span>
+<span class="nc" id="L333">			writer.flush();</span>
+		}
+<span class="nc" id="L335">		RMIView&lt;Packet&lt;Interaction&gt;&gt; newView = new RMIView&lt;&gt;(view,this.ids);</span>
+<span class="nc" id="L336">		newView.getObservableRmi().attachObserver(game.getViewProxy());</span>
+<span class="nc" id="L337">		game.getViewProxy().attachObserver(newView);</span>
+		try{
+<span class="nc bnc" id="L339" title="All 2 branches missed.">			if(game.isFull())</span>
+<span class="nc" id="L340">				launchGame(game);</span>
+<span class="nc" id="L341">		}</span>
+<span class="nc" id="L342">		catch(Exception e){</span>
+<span class="nc" id="L343">			writer.println(&quot;Unable to start a GameCD4 &quot;+e.getMessage());</span>
+<span class="nc" id="L344">			writer.flush();</span>
+<span class="nc" id="L345">			logger.log(e,&quot;Unable to start a GameCD4&quot;);</span>
+		}
+<span class="nc" id="L347">		return newView;</span>
+	}
+
+	/**
+	 * This method connects Socket views to the first game available running in the server
+	 * @param socketView is the SocketView which encapsulated the socket resulting from the 
+	 * server socket's accepting routine
+	 */
+	public synchronized void connect(SocketView&lt;VectorPacket&lt;Interaction&gt;,Packet&lt;Interaction&gt;&gt; socketView){
+<span class="nc" id="L356">		this.ids ++;</span>
+<span class="nc" id="L357">		User user = new User(this.ids,&quot;User#&quot;.concat(Integer.toString(this.ids)));</span>
+<span class="nc" id="L358">		user.setStatus(true);</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">		if(pendingGames.isEmpty())</span>
+		{
+<span class="nc" id="L361">			initGameList();</span>
+		}
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		if(pendingGames.isEmpty())</span>
+<span class="nc" id="L364">			return;</span>
+<span class="nc" id="L365">		GameCD4 game = pendingGames.get(0);</span>
+<span class="nc" id="L366">		game.addUser(user);</span>
+<span class="nc bnc" id="L367" title="All 4 branches missed.">		if(game.canStart() &amp;&amp; expirationDates.get(0).after(new Date(System.currentTimeMillis()+20000)))</span>
+		{
+<span class="nc" id="L369">			Date d = expirationDates.get(0);</span>
+<span class="nc" id="L370">			expirationDates.add(0,new Date(System.currentTimeMillis()+20000));</span>
+<span class="nc" id="L371">			expirationDates.remove(d);</span>
+<span class="nc" id="L372">			writer.println(&quot;A game has reached the minimum number of players to start. Launching in 20 sec&quot;);</span>
+<span class="nc" id="L373">			writer.flush();</span>
+		}
+<span class="nc" id="L375">		SocketView&lt;VectorPacket&lt;Interaction&gt;,Packet&lt;Interaction&gt;&gt; newView = new SocketView&lt;&gt;(socketView,this.ids);</span>
+<span class="nc" id="L376">		game.getViewProxy().attachObserver(newView);</span>
+<span class="nc" id="L377">		newView.attachObserver(game.getViewProxy());</span>
+<span class="nc" id="L378">		newView.run(user.getName());</span>
+		try{
+<span class="nc bnc" id="L380" title="All 2 branches missed.">			if(game.isFull())</span>
+<span class="nc" id="L381">				launchGame(game);</span>
+<span class="nc" id="L382">		}</span>
+<span class="nc" id="L383">		catch(Exception e){</span>
+<span class="nc" id="L384">			writer.println(&quot;Unable to start a GameCD4 &quot;+e.getMessage());</span>
+<span class="nc" id="L385">			writer.flush();</span>
+<span class="nc" id="L386">			logger.log(e,&quot;Unable to start a GameCD4&quot;);</span>
+		}
+<span class="nc" id="L388">	}</span>
+	
+	/**
+	 * This method starts a new Game List 
+	 */
+	private void initGameList(){
+		try {
+<span class="nc bnc" id="L395" title="All 2 branches missed.">			if(this.boardPool.isEmpty()){</span>
+<span class="nc" id="L396">				writer.println(&quot;We are failing in building the game boards so the match cannot be initialized&quot;);</span>
+<span class="nc" id="L397">				writer.flush();</span>
+<span class="nc" id="L398">				return;</span>
+			}
+<span class="nc" id="L400">			pendingGames.add(new GameCD4(minUsers,maxUsers,actionTimer,this.boardPool.poll(),hasMarket,numberOfEmporiumsToWin));</span>
+<span class="nc" id="L401">			Thread t = new Thread(new BoardPoolPopulator(1));</span>
+<span class="nc" id="L402">			t.run();</span>
+<span class="nc" id="L403">		} catch (FileNotFoundException e) {</span>
+<span class="nc" id="L404">			logger.log(e, &quot;Unable to build a new GameCD4&quot;);</span>
+<span class="nc" id="L405">		} catch (CannotCreateGameException c){</span>
+<span class="nc" id="L406">			logger.log(c, &quot;Game creation failed&quot;);</span>
+		}
+<span class="nc" id="L408">		expirationDates.add(new Date(System.currentTimeMillis()+ gameSetUpTimeOut));</span>
+<span class="nc" id="L409">		serverTimeChecker.kill();</span>
+<span class="nc" id="L410">		serverTimeChecker = new ServerTimeChecker(expirationDates,this);</span>
+<span class="nc" id="L411">		Thread t = new Thread(serverTimeChecker);</span>
+<span class="nc" id="L412">		t.setName(&quot;Timer&quot;);</span>
+<span class="nc" id="L413">		t.start();</span>
+<span class="nc" id="L414">	}</span>
+	
+	/**
+	 * This routine starts the server asking the admin for the connection parameters.
+	 * Then stucks on waiting for commands from the System.input 
+	 * @throws IOException when there are problems with scanners and printers
+	 */
+	public void startServer() throws IOException{
+		//lancio i tre thread in ascolto, uno su command line uno su socket e uno su rmi
+		//lancia l'esecuzione del thread che periodicamente checka se qualche match va avviatp
+<span class="nc" id="L424">		boolean end = false;</span>
+<span class="nc" id="L425">		boolean retry = true;</span>
+<span class="nc" id="L426">		this.boardPool = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L427">		writer = new PrintWriter(System.out);</span>
+<span class="nc" id="L428">		BoardPoolPopulator t = new BoardPoolPopulator(10);</span>
+<span class="nc" id="L429">		t.run();</span>
+<span class="nc" id="L430">		this.exipedGamesChecker = new expiredGameChecker();</span>
+<span class="nc" id="L431">		Thread checker = new Thread(this.exipedGamesChecker);</span>
+<span class="nc" id="L432">		checker.setName(&quot;GameStatusChecker&quot;);</span>
+<span class="nc" id="L433">		checker.start();</span>
+<span class="nc" id="L434">		serverTimeChecker = new ServerTimeChecker(expirationDates,this);</span>
+<span class="nc" id="L435">		Scanner scan = new Scanner(System.in);</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">		while(retry){</span>
+<span class="nc" id="L437">			writer.println(&quot;Insert Socket port number and RMI port. Separate with comma.&quot;);</span>
+<span class="nc" id="L438">			writer.flush();</span>
+<span class="nc" id="L439">			String in = scan.nextLine();</span>
+			try{
+<span class="nc" id="L441">				String []ports = in.split(&quot;,&quot;);</span>
+<span class="nc" id="L442">				socketPort = Integer.parseInt(ports[0]);</span>
+<span class="nc bnc" id="L443" title="All 2 branches missed.">				if(socketPort &gt; Math.pow(2, 16))</span>
+<span class="nc" id="L444">					throw new NumberFormatException(&quot;Port number out of range&quot;);</span>
+<span class="nc" id="L445">				rmiPort = Integer.parseInt(ports[1]);</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">				if(rmiPort &gt; Math.pow(2, 16))</span>
+<span class="nc" id="L447">					throw new NumberFormatException(&quot;Port number out of range&quot;);</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">				if(socketPort == rmiPort)</span>
+<span class="nc" id="L449">					throw new NumberFormatException(&quot;Rmi and Socket must listen on different ports&quot;);</span>
+<span class="nc" id="L450">				writer.flush();</span>
+<span class="nc" id="L451">				retry = false;</span>
+<span class="nc" id="L452">			}catch(NumberFormatException|IndexOutOfBoundsException e){</span>
+<span class="nc" id="L453">				retry = true;</span>
+<span class="nc" id="L454">				writer.println(&quot;Error. Retry.&quot;);</span>
+<span class="nc" id="L455">				writer.flush();</span>
+<span class="nc" id="L456">				logger.log(e,&quot;Unable to read port number input&quot;);</span>
+			}
+		}
+<span class="nc" id="L459">		executor = Executors.newCachedThreadPool();</span>
+<span class="nc" id="L460">		socketServer = new SocketServer(socketPort,logger,this);</span>
+		try {
+<span class="nc" id="L462">			rmiServer = new RMIServer(rmiPort,logger,this);</span>
+<span class="nc" id="L463">			executor.submit(rmiServer);</span>
+<span class="nc" id="L464">		} catch (RemoteException e) {</span>
+<span class="nc" id="L465">			writer.println(&quot;Couldn't start RMI server.&quot;);</span>
+<span class="nc" id="L466">			writer.flush();</span>
+<span class="nc" id="L467">			logger.log(e,&quot;Unable to start RMI server&quot;);</span>
+		}
+<span class="nc" id="L469">		executor.submit(socketServer);</span>
+		
+<span class="nc" id="L471">		writer.println(&quot;Server is now running, waiting for incoming connection&quot;);</span>
+<span class="nc" id="L472">		writer.println(&quot;Type '?' for help&quot;);</span>
+<span class="nc" id="L473">		writer.flush();</span>
+		
+		/*
+		 * Our servers has a command line console in which we can type some simple commands
+		 * if the command typed is quit the command line closes herself and
+		 */
+<span class="nc bnc" id="L479" title="All 2 branches missed.">		while(!end){</span>
+<span class="nc" id="L480">			String line = scan.nextLine();</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">			if(line.equals(&quot;quit&quot;))</span>
+<span class="nc" id="L482">				end = true;</span>
+<span class="nc bnc" id="L483" title="All 2 branches missed.">			else if(line.equals(&quot;quit and kill&quot;))</span>
+			{
+<span class="nc" id="L485">				end = true;</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">				for(GameCD4 game : pendingGames)</span>
+<span class="nc" id="L487">					game.close();</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">				for(GameCD4 game : games)</span>
+<span class="nc" id="L489">					game.close();</span>
+<span class="nc" id="L490">			}</span>
+			else
+			{
+<span class="nc" id="L493">				line = line.replaceAll(&quot; &quot;,&quot;&quot;).toLowerCase();</span>
+<span class="nc" id="L494">				this.process(line);</span>
+			}
+		}
+		//When the server is closed no more threads are launched
+<span class="nc" id="L498">		socketServer.kill();</span>
+<span class="nc" id="L499">		rmiServer.kill();</span>
+<span class="nc" id="L500">		exipedGamesChecker.kill();</span>
+<span class="nc" id="L501">		executor.shutdownNow();</span>
+<span class="nc" id="L502">		scan.close();</span>
+<span class="nc" id="L503">		writer.println(&quot;Server shutdown completed&quot;);</span>
+<span class="nc" id="L504">		writer.flush();</span>
+<span class="nc" id="L505">		logger.log(&quot;Server shutdown completed&quot;);</span>
+<span class="nc" id="L506">		logger.close();</span>
+<span class="nc" id="L507">	}</span>
+	
+	/**
+	 * Simply the main of the server application
+	 * @param args are not used
+	 * @throws IOException when the server starting routine fails due to some issuse with IO
+	 */
+	public static void main(String[] args) throws IOException{
+<span class="nc" id="L515">		System.out.println(&quot;The server has been turned on. Wait for service initialization.&quot;);</span>
+<span class="nc" id="L516">		ServerCD4 server = new ServerCD4();</span>
+<span class="nc" id="L517">		server.logger = new GameLogger(&quot;ServerLog&quot;, GameLogger.DEFAULT_LOG_PATH);</span>
+<span class="nc" id="L518">		server.logger.attachHandler(new ConsoleHandler(), GameLogger.MIN_EX_LEVEL);</span>
+<span class="nc" id="L519">		server.logger.log(&quot;The server has been turned on. Wait for service initialization.&quot;);</span>
+<span class="nc" id="L520">		server.startServer();</span>
+<span class="nc" id="L521">	}</span>
+	
+	/**
+	 * This is a stupid command parser method
+	 * @param command is the command we want to execute
+	 */
+	private void process(String command) {
+<span class="nc" id="L528">		Date date = new Date();</span>
+		/*
+		 * The command active games number asks is given to know the number of games that are currently played
+		 */
+<span class="nc bnc" id="L532" title="All 2 branches missed.">		if(command.equals(&quot;activegamesnumber&quot;))</span>
+<span class="nc" id="L533">			System.out.println(date + &quot; At the moment &quot; + games.size() + &quot; games are running.&quot;);</span>
+		/*
+		 * The command pending games number asks is given to know the number of games that are currently waiting to start
+		 */
+<span class="nc bnc" id="L537" title="All 2 branches missed.">		else if(command.equals(&quot;pendinggamesnumber&quot;))</span>
+<span class="nc" id="L538">			System.out.println(date + &quot; At the moment &quot; + pendingGames.size() + &quot; games are waiting to start.&quot;);</span>
+		/*
+		 * This command sets the min number of players to the specified one
+		 */
+<span class="nc bnc" id="L542" title="All 2 branches missed.">		else if(command.contains(&quot;setminnumber:&quot;))</span>
+		{
+<span class="nc" id="L544">			boolean force = command.startsWith(&quot;!&quot;);</span>
+			try{
+<span class="nc" id="L546">				int i = Integer.parseInt(command.split(&quot;:&quot;)[1]);</span>
+<span class="nc bnc" id="L547" title="All 2 branches missed.">				if(i&lt;0)</span>
+				{
+<span class="nc" id="L549">					writer.println(&quot;[FAILURE]should be positive&quot;);</span>
+<span class="nc" id="L550">					writer.flush();</span>
+<span class="nc" id="L551">					return;</span>
+				}
+<span class="nc bnc" id="L553" title="All 4 branches missed.">				if(i&gt;maxUsers &amp;&amp; !force)</span>
+				{
+<span class="nc" id="L555">					writer.println(&quot;[WARNING] You are trying to set min number higher than max number.\n&quot;</span>
+							+ &quot;If you are convinced of what you are doing restate the command starting it with '!'&quot;);
+<span class="nc" id="L557">					writer.flush();</span>
+<span class="nc" id="L558">				}</span>
+				else{
+<span class="nc" id="L560">					System.out.println(date + &quot; updated min number of player to &quot; + i);</span>
+<span class="nc" id="L561">					minUsers = i;</span>
+				}
+<span class="nc" id="L563">			}catch(NumberFormatException e){</span>
+<span class="nc" id="L564">				System.out.println(&quot;Number format incorrect&quot;);</span>
+			}
+<span class="nc" id="L566">		}</span>
+		/*
+		 * This command sets the max number of players to the specified one
+		 */
+<span class="nc bnc" id="L570" title="All 2 branches missed.">		else if(command.contains(&quot;setmaxnumber:&quot;))</span>
+		{
+<span class="nc" id="L572">				boolean force = command.startsWith(&quot;!&quot;);</span>
+				try{
+<span class="nc" id="L574">					int i = Integer.parseInt(command.split(&quot;:&quot;)[1]);</span>
+<span class="nc bnc" id="L575" title="All 2 branches missed.">					if(i&lt;0)</span>
+					{
+<span class="nc" id="L577">						writer.println(&quot;[FAILURE]should be positive&quot;);</span>
+<span class="nc" id="L578">						writer.flush();</span>
+<span class="nc" id="L579">						return;</span>
+					}
+<span class="nc bnc" id="L581" title="All 4 branches missed.">					if(i&lt;minUsers &amp;&amp; !force)</span>
+					{
+<span class="nc" id="L583">						writer.println(&quot;[WARNING] You are trying to set max number lower than min number.\n&quot;</span>
+								+ &quot;If you are convinced of what you are doing restate the command starting it with '!'&quot;);
+<span class="nc" id="L585">						writer.flush();</span>
+<span class="nc" id="L586">					}</span>
+					else{
+<span class="nc" id="L588">						System.out.println(date + &quot; updated max number of player to &quot; + i);</span>
+<span class="nc" id="L589">						maxUsers = i;</span>
+				}
+<span class="nc" id="L591">			}catch(NumberFormatException e){</span>
+<span class="nc" id="L592">				System.out.println(&quot;Number format incorrect&quot;);</span>
+			}
+<span class="nc" id="L594">		}</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">		else if(command.contains(&quot;emporiumstowin:&quot;))</span>
+		{
+				try{
+<span class="nc" id="L598">					int i = Integer.parseInt(command.split(&quot;:&quot;)[1]);</span>
+<span class="nc bnc" id="L599" title="All 2 branches missed.">					if(i&lt;0)</span>
+					{
+<span class="nc" id="L601">						writer.println(&quot;[FAILURE]should be positive&quot;);</span>
+<span class="nc" id="L602">						writer.flush();</span>
+<span class="nc" id="L603">						return;</span>
+					}
+<span class="nc" id="L605">					this.numberOfEmporiumsToWin = i;</span>
+<span class="nc" id="L606">					System.out.println(date + &quot; updated number of emporiums to win to &quot; + i);</span>
+<span class="nc" id="L607">				}</span>
+<span class="nc" id="L608">			catch(NumberFormatException e){</span>
+<span class="nc" id="L609">				System.out.println(&quot;Number format incorrect&quot;);</span>
+			}
+<span class="nc" id="L611">		}</span>
+		/*
+		 * Set the max time an user can take toperform an action before being considered inactive
+		 * to be set to a value lower than 20 s you need to force it adding the ! prefix
+		 */
+<span class="nc bnc" id="L616" title="All 2 branches missed.">		else if(command.contains(&quot;setactiontimeout:&quot;))</span>
+		{
+<span class="nc" id="L618">			boolean force = command.startsWith(&quot;!&quot;);</span>
+			try{
+<span class="nc" id="L620">				int i = Integer.parseInt(command.split(&quot;:&quot;)[1]);</span>
+<span class="nc bnc" id="L621" title="All 2 branches missed.">				if(i&lt;0)</span>
+				{
+<span class="nc" id="L623">					writer.println(&quot;[FAILURE]should be positive&quot;);</span>
+<span class="nc" id="L624">					writer.flush();</span>
+<span class="nc" id="L625">					return;</span>
+				}
+<span class="nc bnc" id="L627" title="All 4 branches missed.">				if(i&lt;20 &amp;&amp; !force)</span>
+				{
+<span class="nc" id="L629">					writer.println(&quot;[WARNING] if the action timeout is too short the game may result not playable.\n&quot;</span>
+							+ &quot;If you are convinced of what you are doing restate the command starting it with '!'&quot;);
+<span class="nc" id="L631">					writer.flush();</span>
+<span class="nc" id="L632">				}</span>
+				else	
+				{
+<span class="nc" id="L635">					actionTimer = i*1000;</span>
+<span class="nc" id="L636">					System.out.println(date + &quot; updated max action timeout to &quot; + i + &quot; [s]&quot;);</span>
+				}
+<span class="nc" id="L638">			}catch(NumberFormatException e){</span>
+<span class="nc" id="L639">				System.out.println(&quot;Number format incorrect&quot;);</span>
+			}
+<span class="nc" id="L641">		}</span>
+		/*
+		 * This command enables the use of the market
+		 */
+<span class="nc bnc" id="L645" title="All 2 branches missed.">		else if(command.contains(&quot;enablemarket&quot;))</span>
+		{
+<span class="nc" id="L647">			this.hasMarket = true;</span>
+<span class="nc" id="L648">			writer.println(date +&quot; Market enabled for new games&quot;);</span>
+<span class="nc" id="L649">			writer.flush();</span>
+<span class="nc" id="L650">		}</span>
+		/*
+		 * This command disables the use of the market
+		 */
+<span class="nc bnc" id="L654" title="All 2 branches missed.">		else if(command.contains(&quot;disablemarket&quot;))</span>
+		{
+<span class="nc" id="L656">			this.hasMarket = false;</span>
+<span class="nc" id="L657">			writer.println(date+&quot; Market disables for new games&quot;);</span>
+<span class="nc" id="L658">			writer.flush();</span>
+<span class="nc" id="L659">		}</span>
+<span class="nc bnc" id="L660" title="All 2 branches missed.">		else if(&quot;?&quot;.equals(command)){</span>
+<span class="nc" id="L661">			writer.println(&quot;Here's a list of some useful server commands&quot;);</span>
+<span class="nc" id="L662">			writer.println(&quot;(if you are in a hurry you can write them with no spaces)&quot;);</span>
+<span class="nc" id="L663">			writer.println(&quot;&quot;);</span>
+<span class="nc" id="L664">			writer.println(&quot;\tactive games number\t\tget the number of running active games&quot;);</span>
+<span class="nc" id="L665">			writer.println(&quot;\tpending games number\t\tget the number of penging games&quot;);</span>
+<span class="nc" id="L666">			writer.println(&quot;\tset min number:&lt;integer&gt;\tset the minimum number of player per game&quot;);</span>
+<span class="nc" id="L667">			writer.println(&quot;\tset max number:&lt;integer&gt;\tset the maximum number of player per game&quot;);</span>
+<span class="nc" id="L668">			writer.println(&quot;\temporiums to win:&lt;integer&gt;\tset the number of emporium to build to end the game&quot;);</span>
+<span class="nc" id="L669">			writer.println(&quot;\tset action timeout:&lt;integer&gt;\tset the action timeout timer&quot;);</span>
+<span class="nc" id="L670">			writer.println(&quot;\tenable market\t\t\tenable the use of the Market for new games&quot;);</span>
+<span class="nc" id="L671">			writer.println(&quot;\tdisable market\t\t\tdisable the use of the Market for new games&quot;);</span>
+<span class="nc" id="L672">			writer.println(&quot;\tquit\t\t\t\tserver shutdown (without killing active and pending games)&quot;);</span>
+<span class="nc" id="L673">			writer.println(&quot;\tquit and kill\t\t\tserver shutdown (with no mercy. This is not very kind if there are active games)&quot;);</span>
+<span class="nc" id="L674">			writer.flush();</span>
+<span class="nc" id="L675">		}</span>
+		else{
+<span class="nc" id="L677">			writer.println(date + &quot; Command not recognised.&quot;);</span>
+<span class="nc" id="L678">			writer.flush();</span>
+		}
+<span class="nc" id="L680">	}</span>
+
+}
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

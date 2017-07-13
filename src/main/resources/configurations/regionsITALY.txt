@@ -1,0 +1,56 @@
+#The first line specifies the number of regions
+#The following lines are one region followed by all its permit cards
+#The sintax of the region's line is:
+#type of region | number of faced up permits | the name of the cities | bonuses associated to that region
+numberOfRegions,3;
+Sea|2|Treviso,Parma,Empoli,Bari,Cagliari|VictoryPointBonus,5;
+numberOfPermits,15;
+Bari,Cagliari|VictoryPointBonus,3|AssistantBonus,1;
+Treviso,Empoli|CoinBonus,3|DrawPoliticsCardBonus,1;
+Empoli,Parma|VictoryPointBonus,3|CoinBonus,3;
+Treviso|VictoryPointBonus,4|CoinBonus,3;
+Empoli|DrawPoliticsCardBonus,3|AssistantBonus,1;
+Parma,Bari,Cagliari|DrawPoliticsCardBonus,1|NobilityPointBonus,1;
+Bari|VictoryPointBonus,7;
+Treviso,Empoli|AssistantBonus,2;
+Empoli,Parma,Bari|AssistantBonus,1|VictoryPointBonus,1;
+Treviso,Empoli,Cagliari|CoinBonus,3;
+Treviso,Bari,Cagliari|CoinBonus,1|VictoryPointBonus,2;
+Treviso,Cagliari|NobilityPointBonus,2;
+Parma,Bari|VictoryPointBonus,3|AssistantBonus,1;
+Cagliari|MainActionBonus,1|CoinBonus,2;
+Parma|AssistantBonus,2|CoinBonus,3;
+Hill|2|Domodossola,Udine,Milano,Firenze,Roma|VictoryPointBonus,5;
+numberOfPermits,15;
+Udine,Firenze,Roma|DrawPoliticsCardBonus,2;
+Domodossola,Firenze|AssistantBonus,2|CoinBonus,1;
+Domodossola,Milano,Firenze|CoinBonus,2|VictoryPointBonus,1;
+Milano|AssistantBonus,2|NobilityPointBonus,1|VictoryPointBonus,2;
+Domodossola|DrawPoliticsCardBonus,2|CoinBonus,4;
+Milano,Roma,Udine|DrawPoliticsCardBonus,1|AssistantBonus,1;
+Firenze|MainActionBonus,1|VictoryPointBonus,2;
+Roma,Udine|VictoryPointBonus,5;
+Domodossola,Milano|CoinBonus,5;
+Udine|DrawPoliticsCardBonus,2|AssistantBonus,2;
+Roma|AssistantBonus,4;
+Firenze,Udine|DrawPoliticsCardBonus,2|NobilityPointBonus,1;
+Roma,Milano|AssistantBonus,3;
+Domodossola,Milano,Roma|CoinBonus,1|NobilityPointBonus,1;
+Domodossola,Firenze,Udine|NobilityPointBonus,1|AssistantBonus,1;
+Mountain|2|Venezia,Latina,Olbia,Napoli,Aosta|VictoryPointBonus,5;
+numberOfPermits,15;
+Aosta,Latina|MainActionBonus,1;
+Aosta|VictoryPointBonus,5|NobilityPointBonus,1;
+Napoli,Venezia|DrawPoliticsCardBonus,2|NobilityPointBonus,1;
+Venezia,Olbia,Aosta|AssistantBonus,1|CoinBonus,1;
+Latina|CoinBonus,7;
+Venezia,Latina,Napoli|DrawPoliticsCardBonus,1|VictoryPointBonus,1;
+Olbia|CoinBonus,1|AssistantBonus,3;
+Napoli|DrawPoliticsCardBonus,3|NobilityPointBonus,1;
+Venezia,Olbia,Napoli|DrawPoliticsCardBonus,1|CoinBonus,1;
+Venezia|DrawPoliticsCardBonus,4;
+Aosta,Olbia|DrawPoliticsCardBonus,3;
+Latina,Napoli|VictoryPointBonus,2|DrawPoliticsCardBonus,2;
+Aosta,Latina,Napoli|NobilityPointBonus,1|VictoryPointBonus,1;
+Olbia,Aosta,Latina|VictoryPointBonus,3;
+Venezia,Olbia|DrawPoliticsCardBonus,1|AssistantBonus,2;

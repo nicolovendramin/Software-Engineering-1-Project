@@ -1,0 +1,44 @@
+#numberOfCities specifies the total number of cities
+#Below you can find a set of bonuses per city
+#They will be shuffled and assigned to the different cities
+#numberOfCityGroups specifies the number of different groups per color
+#The following lines are the bonuses associated to the colors
+#The remaining lines are the cities with the following sintax:
+#name of the city, number of group (0..groups-1)
+numberOfCities,15;
+AssistantBonus,1|CoinBonus,1;
+VictoryPointBonus,2;
+AssistantBonus,1|DrawPoliticsCardBonus,1;
+CoinBonus,1;
+DrawPoliticsCardBonus,1|VictoryPointBonus,1;
+VictoryPointBonus,1;
+AssistantBonus,1;
+NobilityPointBonus,1;
+CoinBonus,2;
+CoinBonus,3;
+NobilityPointBonus,1;
+VictoryPointBonus,3;
+DrawPoliticsCardBonus,1;
+AssistantBonus,2;
+CoinBonus,2;
+numberOfCityGroups,5;
+VictoryPointBonus,20;
+VictoryPointBonus,12;
+VictoryPointBonus,8;
+VictoryPointBonus,5;
+;
+Paris,0;
+London,0;
+Stockholm,0;
+Madrid,0;
+Athens,0;
+Copenaghen,1;
+Helsinki,1;
+Berlin,1;
+Dublin,1;
+Kiev,2;
+Oslo,2;
+Wien,2;
+Zagreb,3;
+Nicosia,3;
+Rome,4;

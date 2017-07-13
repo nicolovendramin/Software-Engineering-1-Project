@@ -1,0 +1,14 @@
+#The first line specifies the number of colors related to politics cards and councelors
+#The second line specifies the number of councelors per color
+#The following lines specify the politics cards of each color:
+#number of color associated with the cards (1..numberOfColors), numOfCards, the number of cards you want of that color
+#"jolly" as first token specify that the following cards are jolly 
+numberOfColors,6;
+councelorsPerColor,4;
+1,numOfCards,13;
+2,numOfCards,13;
+3,numOfCards,13;
+4,numOfCards,13;
+5,numOfCards,13;
+6,numOfCards,13;
+jolly,numOfCards,12;

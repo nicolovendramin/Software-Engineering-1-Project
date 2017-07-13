@@ -1,0 +1,18 @@
+#FOR TEST USE ONLY
+#numberOfCities specifies the total number of cities
+#Below you can find a set of bonuses per city
+#They will be shuffled and assigned to the different cities
+#numberOfCityGroups specifies the number of different groups per color
+#The following lines are the bonuses associated to the colors
+#The remaining lines are the cities with the following sintax:
+#name of the city, number of group (0..groups-1)
+numberOfCities,2
+CoinBonus,4;
+AssistantBonus,1;
+numberOfCityGroup,4;
+CoinBonus,4|AssistantBonus,1;
+CoinBonus,2|AssistantBonus,2;
+CoinBonus,3|AssistantBonus,3;
+CoinBonus,5|AssistantBonus,1;
+Milano,1;
+Torino,2;

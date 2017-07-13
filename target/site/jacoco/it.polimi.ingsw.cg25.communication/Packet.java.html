@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Packet.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.communication</a> &gt; <span class="el_source">Packet.java</span></div><h1>Packet.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.communication;
+
+import java.io.Serializable;
+/**
+ * 
+ * @author nicolo
+ *
+ * @param &lt;T&gt; is the tyoe of the content of the packets. Must be Serializable
+ */
+public class Packet&lt;T extends Serializable&gt; implements Serializable {
+
+	/**
+	 * Serial number for serial communication
+	 */
+	private static final long serialVersionUID = 415188018246828753L;
+	/**
+	 * The content of the package whose type is T
+	 */
+	private T content;
+	/**
+	 * A string to define the packet type. E.g.: chat, game status, action...
+	 */
+	private String packetType;
+	/**
+	 * 0 means broadcast, negative IDs represent the single user to be excluded from the access.
+	 * As instance: -12 means that all but the user 12 can access the content of the packet
+	 */
+	private final int destination;
+
+	/**
+	 * Packet class constructor. Destination is not specifies and it will
+	 * get the default value of 0 (broadcast)
+	 * @param content the object linked to this packet
+	 * @param type the packet type
+	 */
+<span class="fc" id="L36">	public Packet(T content, String type) {</span>
+<span class="fc" id="L37">		this.content = content;</span>
+<span class="fc" id="L38">		this.packetType = type;</span>
+<span class="fc" id="L39">		this.destination = 0;</span>
+<span class="fc" id="L40">	}</span>
+	
+	/**
+	 * Packet class constructor with destination attribute
+	 * @param content the object linked to this packet
+	 * @param type the packet type
+	 * @param destination the destination of the packet
+	 */
+<span class="fc" id="L48">	public Packet(T content, String type, int destination) {</span>
+<span class="fc" id="L49">		this.content = content;</span>
+<span class="fc" id="L50">		this.packetType = type;</span>
+<span class="fc" id="L51">		this.destination = destination;</span>
+<span class="fc" id="L52">	}	</span>
+	
+	/**
+	 * Function to understand if you are the correct receiver of a message
+	 * @param id is the id of the receiver
+	 * @return true if the receiver is the destination of the packet, false otherwise
+	 */
+	public boolean isForMe(int id) {
+<span class="fc bfc" id="L60" title="All 8 branches covered.">		return (destination == 0 || id==destination) || (destination&lt;0 &amp;&amp; id!=-destination);</span>
+	}
+	
+	/**
+	 * This method gives the access to the content of the packet. But only if you are it's receiver
+	 * @param id is the id of the component who wants to access the packet
+	 * @return the content if the id of the reader is correct
+	 * @throws IllegalAccessException if the reader has not capabilities to access the packet
+	 */
+	public T getContent(int id) throws IllegalAccessException {
+<span class="fc bfc" id="L70" title="All 2 branches covered.">		if(!isForMe(id)) {</span>
+<span class="fc" id="L71">			throw new IllegalAccessException(&quot;You can not get this content&quot;);</span>
+		}
+		else {
+<span class="fc" id="L74">			return this.content;</span>
+		}
+	}
+	
+	/**
+	 * this returns the type of the packet (&quot;Flow&quot;,&quot;Action&quot;,....)
+	 * @return the type of the packet
+	 */
+	public String getType() {
+<span class="fc" id="L83">		return this.packetType;</span>
+	}
+	
+	/**
+	 * This method is made to get the destination of the packet
+	 * @return the destination of the packet
+	 * @throws IllegalAccessException if the destination is private
+	 */
+	public int getDestination() throws IllegalAccessException{
+<span class="fc" id="L92">		throw new IllegalAccessException();</span>
+	}
+	
+	/**
+	 * This method is made to get the destination of the packet
+	 * @throws IllegalAccessException if the public source is private and cannot be changed
+	 */
+	public void setPublicSource(int viewId) throws IllegalAccessException{
+<span class="fc" id="L100">		throw new IllegalAccessException();</span>
+	}
+	
+	/**
+	 * This method is made to get the destination of the packet
+	 * @param change a packet to be repacked in a signed packet
+	 * @return another Packet signed with the id of the parameter
+	 * @throws IllegalAccessException if the public source is private and cannot be changed
+	 */
+	public &lt;C extends Packet&lt;T&gt;&gt; C sign(C change) throws IllegalAccessException{
+<span class="fc" id="L110">		throw new IllegalAccessException(&quot;Cannot sign a Packet&quot;);</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

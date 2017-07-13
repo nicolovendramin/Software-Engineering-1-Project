@@ -1,0 +1,14 @@
+#FOR TEST USE ONLY
+#The first line specifies the number of regions
+#The following lines are one region followed by all its permit cards
+#The sintax of the region's line is:
+#type of region | number of faced up permits | the name of the cities | bonuses associated to that region
+numberOfRegions,2;
+mare|2|Milano|CoinBonus,3|AssistantBonus,1;
+numberOfPermits,2;
+Milano|CoinBonus,1;
+Milano|AssistantBonus,2;
+montagna|2|Torino|AssistantBonus,2;
+numberOfPermits,2;
+Torino|CoinBonus,1;
+Torino|AssistantBonus,2;

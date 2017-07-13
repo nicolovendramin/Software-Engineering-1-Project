@@ -1,0 +1,5 @@
+#FOR TEST USE ONLY
+#the lines specify the edges between cities
+#the sintax is: city1, city2
+#where city1 and city2 are two vertexes
+Milano,Torino;

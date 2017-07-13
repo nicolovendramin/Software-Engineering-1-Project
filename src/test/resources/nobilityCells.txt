@@ -1,0 +1,8 @@
+#FOR TEST USE ONLY
+#param1 : nobility cell ID
+#param2..n : bonuses included in the cell
+#Bonus sintax: type of bonus, quantity
+1|CoinBonus,1|AssistantBonus,1;
+2|CoinBonus,2|AssistantBonus,2;
+3|CoinBonus,3|AssistantBonus,3;
+4|CoinBonus,4|AssistantBonus,4;

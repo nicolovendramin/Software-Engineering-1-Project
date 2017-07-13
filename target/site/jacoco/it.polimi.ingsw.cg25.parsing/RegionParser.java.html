@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RegionParser.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.parsing</a> &gt; <span class="el_source">RegionParser.java</span></div><h1>RegionParser.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.parsing;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Queue;
+import java.util.Random;
+
+import it.polimi.ingsw.cg25.exceptions.CannotCreateGameException;
+import it.polimi.ingsw.cg25.model.dashboard.Councelor;
+import it.polimi.ingsw.cg25.model.dashboard.Council;
+import it.polimi.ingsw.cg25.model.dashboard.bonus.Bonus;
+import it.polimi.ingsw.cg25.model.dashboard.bonus.BonusCreator;
+import it.polimi.ingsw.cg25.model.dashboard.cards.PermitCard;
+import it.polimi.ingsw.cg25.model.dashboard.cards.PermitDeck;
+import it.polimi.ingsw.cg25.model.dashboard.cards.RewardCard;
+import it.polimi.ingsw.cg25.model.dashboard.topological.City;
+import it.polimi.ingsw.cg25.model.dashboard.topological.Region;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+public class RegionParser implements Parser {
+
+	/**
+	 * The bonus factory
+	 */
+	private final BonusCreator creator;
+	/**
+	 * The List of regions created by the parser
+	 */
+	private final List&lt;Region&gt; regions;
+	/**
+	 * The List of cities previously created by CitiesParser
+	 */
+	private final List&lt;City&gt; cities;
+	/**
+	 * The List of unemployed councelors
+	 */
+	private final List&lt;Councelor&gt; councelors;
+	/**
+	 * The king's council
+	 */
+	private Council kingCouncil;
+
+	/**
+	 * RegionParser class constructor
+	 * @param cities the List of cities to assign to the regions created by CitiesParser
+	 * @param creator a bonus concrete creator
+	 * @param councelors the List of councelors created by PoliticsParser
+	 */
+<span class="fc" id="L58">	public RegionParser(List&lt;City&gt; cities, BonusCreator creator, List&lt;Councelor&gt; councelors) {</span>
+<span class="fc" id="L59">		this.creator = creator;</span>
+<span class="fc" id="L60">		this.regions = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L61">		this.cities = cities;</span>
+<span class="fc" id="L62">		this.councelors = councelors;</span>
+		
+		//Crea il consiglio del Re
+<span class="fc" id="L65">		this.kingCouncil = new Council(createCouncilQueue(), &quot;King's Council&quot;);</span>
+<span class="fc" id="L66">	}</span>
+	
+	@Override
+	public void parseLineByLine(InputStreamReader inStrRdr) throws IOException, CannotCreateGameException {
+<span class="fc" id="L70">		BufferedReader br = new BufferedReader(inStrRdr);</span>
+		String line;
+<span class="fc" id="L72">		line = br.readLine();</span>
+		//Rimuovi commenti iniziali
+<span class="fc bfc" id="L74" title="All 2 branches covered.">		while(line.startsWith(&quot;#&quot;))</span>
+<span class="fc" id="L75">			line = br.readLine();</span>
+		//Elimina il terminatore
+<span class="fc" id="L77">		String numOfRegions = line.replaceAll(&quot;;&quot;, &quot;&quot;).split(&quot;,&quot;)[1];</span>
+		
+<span class="fc bfc" id="L79" title="All 2 branches covered.">		for(int i = 0; i &lt; Integer.parseInt(numOfRegions); i++) {</span>
+<span class="fc" id="L80">			line = br.readLine();</span>
+<span class="fc" id="L81">			String[] parts = line.replaceAll(&quot;;&quot;, &quot;&quot;).split(&quot;\\|&quot;);</span>
+<span class="fc" id="L82">			String regionName = parts[0];</span>
+<span class="fc" id="L83">			String numFacedUpPermits = parts[1];</span>
+<span class="fc" id="L84">			String[] cityNames = parts[2].split(&quot;,&quot;);</span>
+<span class="fc" id="L85">			List&lt;City&gt; regionCities = new ArrayList&lt;&gt;();</span>
+			//Costruzione delle città della regione
+<span class="fc bfc" id="L87" title="All 2 branches covered.">			for(int j = 0; j &lt; cityNames.length; j++) {</span>
+				try {
+<span class="fc" id="L89">					regionCities.add(cityFromName(cityNames[j]));</span>
+<span class="nc" id="L90">				} catch (Exception e) {</span>
+<span class="nc" id="L91">					throw new CannotCreateGameException(&quot;City parsing failed&quot;, e);</span>
+<span class="fc" id="L92">				}</span>
+			}
+<span class="fc" id="L94">			List&lt;Bonus&gt; tempBonus = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">			for(int k = 3; k &lt; parts.length; k++) {</span>
+<span class="fc" id="L96">				String[] bonusParam = parts[k].split(&quot;,&quot;);</span>
+<span class="fc" id="L97">				tempBonus.add(creator.createBonus(bonusParam[0], bonusParam[1]));</span>
+			}
+			//Carta reward per la regione
+<span class="fc" id="L100">			RewardCard reward = new RewardCard(tempBonus);</span>
+			//Parsing delle permit tiles
+<span class="fc" id="L102">			String permitQnt = br.readLine().replaceAll(&quot;;&quot;, &quot;&quot;).split(&quot;,&quot;)[1];</span>
+			//Array di permit della regione
+<span class="fc" id="L104">			List&lt;PermitCard&gt; regionPermits = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">			for(int n = 0; n &lt; Integer.parseInt(permitQnt); n++) {</span>
+<span class="fc" id="L106">				line = br.readLine();</span>
+<span class="fc" id="L107">				String newLine = line.replaceAll(&quot;;&quot;, &quot;&quot;);</span>
+<span class="fc" id="L108">				String[] permitCities = newLine.split(&quot;\\|&quot;)[0].split(&quot;,&quot;);</span>
+<span class="fc" id="L109">				List&lt;City&gt; permitCardCities = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L110">				List&lt;Bonus&gt; permitBonus = new ArrayList&lt;&gt;();</span>
+				//Costruzione delle città della permit
+<span class="fc bfc" id="L112" title="All 2 branches covered.">				for(int m = 0; m &lt; permitCities.length; m++) {</span>
+					try {
+<span class="fc" id="L114">						permitCardCities.add(cityFromName(permitCities[m]));</span>
+<span class="nc" id="L115">					} catch (Exception e) {</span>
+<span class="nc" id="L116">						throw new CannotCreateGameException(&quot;City parsing failed&quot;, e);</span>
+<span class="fc" id="L117">					}</span>
+				}
+				//Costruzione dei bonus della permit 
+<span class="fc bfc" id="L120" title="All 2 branches covered.">				for(int x = 1; x &lt; newLine.split(&quot;\\|&quot;).length; x++) {</span>
+<span class="fc" id="L121">					String[] bonusParam = newLine.split(&quot;\\|&quot;)[x].split(&quot;,&quot;);</span>
+<span class="fc" id="L122">					permitBonus.add(creator.createBonus(bonusParam[0], bonusParam[1]));</span>
+				}
+<span class="fc" id="L124">				regionPermits.add(new PermitCard(permitCardCities, permitBonus));</span>
+			}
+			
+			//Controllo permits e faced-up permits
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">			if(Integer.parseInt(numFacedUpPermits) &gt; regionPermits.size())</span>
+<span class="nc" id="L129">				throw new IllegalArgumentException(&quot;The number of faced up permits is greater than the number of permit cards&quot;);</span>
+<span class="fc" id="L130">			else regions.add(new Region(regionName, regionCities, new PermitDeck(regionPermits), new Council(createCouncilQueue(), regionName),</span>
+<span class="fc" id="L131">					reward, Integer.parseInt(numFacedUpPermits)));</span>
+			
+		}
+		
+<span class="fc" id="L135">	}</span>
+
+	/**
+	 * The method return a city from its name
+	 * @param name the name of the city
+	 * @return a City object
+	 * @throws Exception if the collection of cities does not contain the specified one
+	 */
+	private City cityFromName(String name) {
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">		for (int i = 0; i &lt; this.cities.size(); i++) {</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">			if (this.cities.get(i).getName().equals(name))</span>
+<span class="fc" id="L146">				return this.cities.get(i);</span>
+		}
+		//Se il ciclo non ritorna
+<span class="nc" id="L149">		throw new NoSuchElementException(name + &quot; has not been created!&quot;);</span>
+	}
+
+	/**
+	 * This method is used to create a council from a List of unemployed councelors
+	 * @return a Council object
+	 */
+	private Queue&lt;Councelor&gt; createCouncilQueue() {
+<span class="fc" id="L157">		Random random = new Random(System.nanoTime());</span>
+<span class="fc" id="L158">		Queue&lt;Councelor&gt; tempQueue = new LinkedList&lt;&gt;();</span>
+		
+<span class="fc bfc" id="L160" title="All 2 branches covered.">		for(int i=0; i&lt;4; i++) {</span>
+<span class="fc" id="L161">			int index = random.nextInt(this.councelors.size());</span>
+<span class="fc" id="L162">			tempQueue.add(this.councelors.get(index));</span>
+<span class="fc" id="L163">			this.councelors.remove(index);</span>
+		}
+		
+<span class="fc" id="L166">		return tempQueue;</span>
+	}
+
+	/**
+	 * @return the List of regions created after executing this.parseLineByLine()
+	 */
+	public List&lt;Region&gt; getRegions() {
+<span class="fc" id="L173">		return regions;</span>
+	}
+
+	/**
+	 * @return a reference to the king's council created after executing this.parseLineByLine()
+	 */
+	public Council getKingCouncil() {
+<span class="fc" id="L180">		return kingCouncil;</span>
+	}
+
+	/**
+	 * @return the List of unemployed councelors after executing this.parseLineByLine
+	 * and creating the councils of the regions
+	 */
+	public List&lt;Councelor&gt; getCouncelors() {
+<span class="fc" id="L188">		return councelors;</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

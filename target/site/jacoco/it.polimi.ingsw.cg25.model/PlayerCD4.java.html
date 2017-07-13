@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PlayerCD4.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.model</a> &gt; <span class="el_source">PlayerCD4.java</span></div><h1>PlayerCD4.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.model;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import org.jgrapht.alg.ConnectivityInspector;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.UndirectedSubgraph;
+
+import it.polimi.ingsw.cg25.exceptions.NoCardsException;
+import it.polimi.ingsw.cg25.exceptions.OneEmporiumOnlyException;
+import it.polimi.ingsw.cg25.gamegenerics.Player;
+import it.polimi.ingsw.cg25.model.dashboard.Emporium;
+import it.polimi.ingsw.cg25.model.dashboard.cards.PermitCard;
+import it.polimi.ingsw.cg25.model.dashboard.cards.PoliticsCard;
+import it.polimi.ingsw.cg25.model.dashboard.topological.City;
+import it.polimi.ingsw.cg25.model.dashboard.topological.Region;
+import it.polimi.ingsw.cg25.onlinegenerics.OnlineUser;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+public class PlayerCD4 extends Player implements OnlineUser {
+
+	/**
+	 * The pocket of the player
+	 */
+	private final PocketCD4 pocket;
+	/**
+	 * The match where the player is playing
+	 */
+	private final MatchCD4 currentMatch;
+	/**
+	 * is the player active?
+	 */
+	private boolean active;
+	/**
+	 * is the player excluded from the turn?
+	 */
+	private boolean excluded;
+	/**
+	 * the view ID linked to the player
+	 */
+	private final int userID;
+	/**
+	 * the current hand of the player
+	 */
+	private final List&lt;PoliticsCard&gt; politicsCards;
+	/**
+	 * the player's emporiums
+	 */
+	private final List&lt;Emporium&gt; playerEmporiums;
+	/**
+	 * the List of permit cards to be used
+	 */
+	private final List&lt;PermitCard&gt; permitsToBeUsed;
+	/**
+	 * the List of permit cards to use
+	 */
+	private final List&lt;PermitCard&gt; usedPermits;
+
+	/**
+	 * PlayerCD4 class constructor
+	 * @param viewID the id of the view linked to the player
+	 * @param name the name of the player
+	 * @param color the color of the player
+	 * @param currentMatch the match where the player is playing
+	 * @param pocket the pocket of the player
+	 */
+	public PlayerCD4(int viewID, String name, HSBColor color, MatchCD4 currentMatch, PocketCD4 pocket) {
+<span class="fc" id="L76">		super(name, color);</span>
+		
+<span class="fc bfc" id="L78" title="All 2 branches covered.">		if(currentMatch == null)</span>
+<span class="fc" id="L79">			throw new NullPointerException(&quot;You can't create a PlayerCD4 without a match!&quot;);</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">		if(pocket == null)</span>
+<span class="fc" id="L81">			throw new NullPointerException(&quot;You can't create a PlayerCD4 without a pocket!&quot;);</span>
+		
+<span class="fc" id="L83">		politicsCards = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L84">		playerEmporiums = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L85">		permitsToBeUsed = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L86">		usedPermits = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L87">		this.userID = viewID;</span>
+<span class="fc" id="L88">		this.currentMatch = currentMatch;</span>
+<span class="fc" id="L89">		this.pocket = pocket;</span>
+<span class="fc" id="L90">	}</span>
+
+	/**
+	 * Add a main action in this turn for this player
+	 * @param additionalMainActions
+	 */
+	public void addMainAction(int additionalMainActions) {
+<span class="fc" id="L97">		this.currentMatch.addMainAction(additionalMainActions);</span>
+<span class="fc" id="L98">	}</span>
+
+	/**
+	 * Add a politics card to the player's hand
+	 * @param polCard the politics card to add
+	 */
+	public void addPoliticsCard(PoliticsCard polCard) {
+<span class="fc" id="L105">		this.politicsCards.add(polCard);</span>
+<span class="fc" id="L106">	}</span>
+
+	/**
+	 * @return the pocket of the player
+	 */
+	public PocketCD4 getPocket() {
+<span class="fc" id="L112">		return pocket;</span>
+	}
+
+	/**
+	 * @return a reference to the hand of the player
+	 */
+	public List&lt;PoliticsCard&gt; getPoliticsCards() {
+<span class="fc" id="L119">		return politicsCards;</span>
+	}
+
+	/**
+	 * @return a reference to the ArrayList of permit cards the player can use
+	 */
+	public List&lt;PermitCard&gt; getPermitsToBeUsed() {
+<span class="fc" id="L126">		return permitsToBeUsed;</span>
+	}
+
+	/**
+	 * @return a reference to the ArrayList of permit cards the player has
+	 *         already used
+	 */
+	public List&lt;PermitCard&gt; getUsedPermits() {
+<span class="fc" id="L134">		return usedPermits;</span>
+	}
+
+	/**
+	 * @return a reference to the List of player's emporiums
+	 */
+	public List&lt;Emporium&gt; getPlayerEmporiums() {
+<span class="fc" id="L141">		return playerEmporiums;</span>
+	}
+
+	/**
+	 * @return the match where the player is playing
+	 */
+	public MatchCD4 getCurrentMatch() {
+<span class="fc" id="L148">		return currentMatch;</span>
+	}
+
+	/**
+	 * Discard a card from the player's hand
+	 * @param card the card to discard
+	 */
+	public void discardPolitics(PoliticsCard card) {
+<span class="fc" id="L156">		Iterator&lt;PoliticsCard&gt; i = this.politicsCards.iterator();</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">		while(i.hasNext()) {</span>
+<span class="fc" id="L158">			PoliticsCard pc = i.next();</span>
+			//Both cards are jolly
+<span class="fc bfc" id="L160" title="All 4 branches covered.">			if(card.getParty().getIsJolly() &amp;&amp; pc.getParty().getIsJolly()) {</span>
+<span class="fc" id="L161">				i.remove();</span>
+<span class="fc" id="L162">				break;</span>
+			}
+			//Both cards are not a jolly
+<span class="pc bpc" id="L165" title="2 of 4 branches missed.">			else if(pc.getParty().sameParty(card.getParty()) &amp;&amp; !pc.getParty().getIsJolly()</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">					&amp;&amp; !card.getParty().getIsJolly()) {</span>
+<span class="fc" id="L167">				i.remove();</span>
+<span class="fc" id="L168">				break;</span>
+			}
+		}
+<span class="fc" id="L171">	}</span>
+
+	/**
+	 * Build an emporium in the specified city and acquire all the bonuses of
+	 * directly connected cities with a player's emporium.&lt;br&gt;
+	 * Furthermore the method checks if the player should acquire a city color reward and/or a region reward&lt;br&gt;
+	 * Gives 3 victory points if the player builds its last emporium
+	 * @param city the city where to build
+	 * @throws OneEmporiumOnlyException this exception is thrown when the current player already has 
+	 * an emporium in the specified city
+	 */
+	public void buildEmporium(City city) throws OneEmporiumOnlyException {
+		// Temp array with cities where the player has an emporium
+<span class="fc" id="L184">		Set&lt;City&gt; citiesWithEmp = new HashSet&lt;&gt;();</span>
+		
+		//Check if the player has already built an emporium in &quot;city&quot;
+<span class="fc bfc" id="L187" title="All 2 branches covered.">		for (Emporium emp : city.getCityEmporiums()) {</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">			if (emp.getOwner() == this)</span>
+<span class="fc" id="L189">				throw new OneEmporiumOnlyException();</span>
+		}
+
+		// Otherwise build an emporium
+<span class="fc" id="L193">		Emporium emporium = new Emporium(this, city);</span>
+<span class="fc" id="L194">		this.playerEmporiums.add(emporium);</span>
+<span class="fc" id="L195">		city.addEmporium(emporium);</span>
+		
+		// If last emporium, give 3 victory points
+<span class="fc bfc" id="L198" title="All 2 branches covered.">		if(this.getPlayerEmporiums().size() == currentMatch.numberOfEmporiumsToWin)</span>
+<span class="fc" id="L199">			this.getPocket().addPocketable(new VictoryPoint(3));</span>
+		
+		// Now populate citiesWithEmp
+<span class="fc bfc" id="L202" title="All 2 branches covered.">		for(City c : currentMatch.getBoard().getCities()) {</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">			for(Emporium emp : c.getCityEmporiums()) {</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">				if(emp.getOwner() == this) {</span>
+<span class="fc" id="L205">					citiesWithEmp.add(c);</span>
+<span class="fc" id="L206">					break;</span>
+				}
+			}
+		}
+
+		// Get the bonuses
+		// Create a subgraph
+<span class="fc" id="L213">		UndirectedSubgraph&lt;City, DefaultEdge&gt; subGraph = new UndirectedSubgraph&lt;&gt;(</span>
+<span class="fc" id="L214">				currentMatch.getBoard().getRoadNetwork(), citiesWithEmp,</span>
+<span class="fc" id="L215">				currentMatch.getBoard().getRoadNetwork().edgeSet());</span>
+
+		// Create a subgraph connectivity inspector
+<span class="fc" id="L218">		ConnectivityInspector&lt;City, DefaultEdge&gt; b = new ConnectivityInspector&lt;&gt;(subGraph);</span>
+		
+		// Acquire all bonuses
+		//ConnectedSetOf contains also &quot;city&quot;
+<span class="fc bfc" id="L222" title="All 2 branches covered.">		for(City c : b.connectedSetOf(city)) {</span>
+<span class="fc" id="L223">			c.takeAllBonuses(this);</span>
+		}
+		
+		// Init flags for allocating king reward cards
+<span class="fc" id="L227">		boolean regionFlag = false;</span>
+<span class="fc" id="L228">		boolean colorFlag = false;</span>
+		
+		// Check if the player has an emporium in all the cities of a region
+<span class="fc bfc" id="L231" title="All 2 branches covered.">		for(Region r : this.currentMatch.getBoard().getRegions()) {</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">			if(citiesWithEmp.containsAll(r.getCities())) {</span>
+<span class="fc" id="L233">				r.getBonusCard().takeAllBonuses(this);</span>
+<span class="fc" id="L234">				regionFlag = true;</span>
+			}
+		}
+		
+		// Check if the player has an emporium in all the cities of a color
+<span class="fc" id="L239">		List&lt;City&gt; sameColorWithEmp = new ArrayList&lt;&gt;();</span>
+		//Tutte le città in cui ci sono empori dello stesso colore di quella in cui sto costruendo
+<span class="fc" id="L241">		citiesWithEmp.stream().filter(cwe -&gt; cwe.getColor().getColor().equals(city.getColor().getColor())).</span>
+<span class="fc" id="L242">			forEach(c -&gt; sameColorWithEmp.add(c));</span>
+		
+		// A List of cities of the same color of the one where I'm building
+<span class="fc" id="L245">		List&lt;City&gt; sameColor = new ArrayList&lt;&gt;();</span>
+		// Se il colore della città dell'emporio è uguale al colore della città della board...
+<span class="fc" id="L247">		this.currentMatch.getBoard().getCities().stream().filter(cb -&gt; cb.getColor().getColor().equals(city.getColor().</span>
+<span class="fc" id="L248">				getColor())).forEach(c -&gt; sameColor.add(c));</span>
+		
+		// Alloca tutti i bonus del colore
+<span class="fc bfc" id="L251" title="All 2 branches covered.">		if(sameColorWithEmp.containsAll(sameColor)) {</span>
+<span class="fc" id="L252">			sameColorWithEmp.get(0).getColor().takeAllBonuses(this);</span>
+<span class="fc" id="L253">			colorFlag = true;</span>
+		}
+		
+		//Alloca la prima reward card
+<span class="fc bfc" id="L257" title="All 4 branches covered.">		if(regionFlag || colorFlag)</span>
+			try {
+<span class="fc" id="L259">				currentMatch.getBoard().getKingTiles().drawCard().takeAllBonuses(this);</span>
+<span class="pc" id="L260">			} catch (NoCardsException e) {</span>
+				// If no cards then do nothing
+			}
+<span class="fc" id="L263">	}</span>
+
+	@Override
+	public void setStatus(boolean active) {
+<span class="fc" id="L267">		this.active = active;</span>
+<span class="fc" id="L268">	}</span>
+
+	@Override
+	public boolean isActive() {
+<span class="fc" id="L272">		return this.active;</span>
+	}
+
+	@Override
+	public int getUserID() {
+<span class="fc" id="L277">		return this.userID;</span>
+	}
+
+	/**
+	 * @return the excluded
+	 */
+	public boolean isExcluded() {
+<span class="fc" id="L284">		return excluded;</span>
+	}
+
+	/**
+	 * @param excluded the excluded to set
+	 */
+	public void setExcluded(boolean excluded) {
+<span class="fc" id="L291">		this.excluded = excluded;</span>
+<span class="fc" id="L292">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Region.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.model.dashboard.topological</a> &gt; <span class="el_source">Region.java</span></div><h1>Region.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.model.dashboard.topological;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import it.polimi.ingsw.cg25.exceptions.NoCardsException;
+import it.polimi.ingsw.cg25.model.dashboard.Council;
+import it.polimi.ingsw.cg25.model.dashboard.cards.PermitCard;
+import it.polimi.ingsw.cg25.model.dashboard.cards.PermitDeck;
+import it.polimi.ingsw.cg25.model.dashboard.cards.RewardCard;
+
+/**
+ * 
+ * @author Giovanni
+ *
+ */
+public class Region {
+	
+	/**
+	 * The name of the region
+	 */
+	private final String name;
+	/**
+	 * The cities of the region
+	 */
+	private final List&lt;City&gt; cities;
+	/**
+	 * The faced up permits of the region
+	 */
+	private final List&lt;PermitCard&gt; faceUpPermits;
+	/**
+	 * The deck of permit cards
+	 */
+	private final PermitDeck permitTiles;
+	/**
+	 * The council of the region
+	 */
+	private final Council council;
+	/**
+	 * The reward card linked to the region
+	 */
+	private final RewardCard bonusCard;
+	/**
+	 * The number of faced up cards
+	 */
+	private final int numFacedUpPermits;
+
+	/**
+	 * Region class constructor
+	 * @param name the name of the region
+	 * @param cities a List of cities of the region
+	 * @param permitTiles the reference to a permit deck
+	 * @param council the region's council
+	 * @param bonusCard the region's bonus card
+	 * @param numFacedUpPermits the number of faced up permits
+	 * @exception NullPointerException when at least one of the arguments is null
+	 * @exception IllegalArgumentException when the List of cities is empty or the number of faced up cards
+	 * is less than 1
+	 */
+	public Region(String name, List&lt;City&gt; cities, PermitDeck permitTiles, Council council, RewardCard bonusCard,
+<span class="fc" id="L61">			int numFacedUpPermits) {</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">		if(name == null)</span>
+<span class="fc" id="L63">			throw new NullPointerException(&quot;You can't create a region without a name!&quot;);</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">		if(cities == null)</span>
+<span class="fc" id="L65">			throw new NullPointerException(&quot;You can't create a region without a List of cities!&quot;);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">		if(cities.isEmpty())</span>
+<span class="fc" id="L67">			throw new IllegalArgumentException(&quot;You can't create a region without at least a city!&quot;);</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">		if(permitTiles == null)</span>
+<span class="fc" id="L69">			throw new NullPointerException(&quot;You can't create a region without a permit deck!&quot;);</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">		if(council == null)</span>
+<span class="fc" id="L71">			throw new NullPointerException(&quot;You can't create a region without a council!&quot;);</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">		if(bonusCard == null)</span>
+<span class="fc" id="L73">			throw new NullPointerException(&quot;You can't create a region without a reward card!&quot;);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">		if(numFacedUpPermits &lt; 1)</span>
+<span class="fc" id="L75">			throw new IllegalArgumentException(&quot;The number of faced up permits is invalid!&quot;);</span>
+		
+<span class="fc" id="L77">		this.name = name;</span>
+<span class="fc" id="L78">		this.cities = cities;</span>
+<span class="fc" id="L79">		this.permitTiles = permitTiles;</span>
+
+<span class="fc" id="L81">		faceUpPermits = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L82">		this.numFacedUpPermits = numFacedUpPermits;</span>
+		
+<span class="fc bfc" id="L84" title="All 2 branches covered.">		for (int i = 1; i &lt;= numFacedUpPermits; i++) {</span>
+			try {
+<span class="fc" id="L86">				faceUpPermits.add(permitTiles.drawCard());</span>
+<span class="nc" id="L87">			} catch (NoCardsException e) {</span>
+				//Do nothing
+<span class="fc" id="L89">			}</span>
+		}
+
+<span class="fc" id="L92">		this.council = council;</span>
+<span class="fc" id="L93">		this.bonusCard = bonusCard;</span>
+<span class="fc" id="L94">	}</span>
+
+	/**
+	 * @return the name of the region
+	 */
+	public String getName() {
+<span class="fc" id="L100">		return name;</span>
+	}
+
+	/**
+	 * @return the ArrayList of the cities in this region
+	 */
+	public List&lt;City&gt; getCities() {
+<span class="fc" id="L107">		return cities;</span>
+	}
+
+	/**
+	 * @return the council of the region
+	 */
+	public Council getCouncil() {
+<span class="fc" id="L114">		return council;</span>
+	}
+
+	/**
+	 * @return the bonus of the region
+	 */
+	public RewardCard getBonusCard() {
+<span class="fc" id="L121">		return bonusCard;</span>
+	}
+
+	/**
+	 * @return the reference to the faceUpPermits ArrayList
+	 */
+	public List&lt;PermitCard&gt; getFaceUpPermits() {
+<span class="fc" id="L128">		return faceUpPermits;</span>
+	}
+
+	/**
+	 * @param index the index of the faced up permit you want to draw
+	 * @return the selected faced up permit card
+	 * @throws NoCardsException if there are no more cards to return
+	 */
+	public PermitCard getPermit(int index) throws NoCardsException {
+<span class="fc bfc" id="L137" title="All 2 branches covered.">		if (faceUpPermits.isEmpty())</span>
+<span class="fc" id="L138">			throw new NoCardsException();</span>
+<span class="fc" id="L139">		PermitCard tempCard = faceUpPermits.remove(index);</span>
+		// Aggiunge una nuova carta scoperta
+		try {
+<span class="fc" id="L142">			this.faceUpPermits.add(permitTiles.drawCard());</span>
+<span class="fc" id="L143">		} catch (NoCardsException exc) {</span>
+
+<span class="fc" id="L145">		}</span>
+		// Ritorna la carta scelta
+<span class="fc" id="L147">		return tempCard;</span>
+	}
+
+	/**
+	 * changeFaceUpPermits allows the player to change the faced up
+	 * permits of a region
+	 * @throws NoCardsException if the deck of permits is empty
+	 */
+	public void changeFaceUpPermits() throws NoCardsException {
+		// Enqueue all the faced-up permit cards
+<span class="fc" id="L157">		permitTiles.enqueue(faceUpPermits);</span>
+<span class="fc" id="L158">		faceUpPermits.clear();</span>
+
+<span class="fc bfc" id="L160" title="All 2 branches covered.">		for (int i = 1; i &lt;= numFacedUpPermits; i++) {</span>
+<span class="fc" id="L161">			this.faceUpPermits.add(permitTiles.drawCard());</span>
+		}
+<span class="fc" id="L163">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

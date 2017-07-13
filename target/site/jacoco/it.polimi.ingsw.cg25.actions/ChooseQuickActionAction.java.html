@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>ChooseQuickActionAction.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">cg25</a> &gt; <a href="index.source.html" class="el_package">it.polimi.ingsw.cg25.actions</a> &gt; <span class="el_source">ChooseQuickActionAction.java</span></div><h1>ChooseQuickActionAction.java</h1><pre class="source lang-java linenums">package it.polimi.ingsw.cg25.actions;
+
+import it.polimi.ingsw.cg25.model.MatchCD4;
+import it.polimi.ingsw.cg25.model.dto.DTOAction;
+
+/**
+ * 
+ * @author nicolo
+ *
+ */
+public class ChooseQuickActionAction extends MatchAction{
+	
+	/**
+	 * The interaction for the choice of the quick action to do
+	 */
+	private SingleChoiceInteraction&lt;DTOAction&gt; nextAction;
+	
+
+	public ChooseQuickActionAction(MatchCD4 model)
+	{
+<span class="fc" id="L21">		super(model);</span>
+<span class="fc" id="L22">	}</span>
+
+	/**
+	 * sets up the action
+	 */
+	@Override
+	public void setup()
+	{
+<span class="nc bnc" id="L30" title="All 2 branches missed.">		if(!this.getInteractions().isEmpty()) </span>
+<span class="nc" id="L31">			return;</span>
+<span class="nc" id="L32">		this.nextAction = new SingleChoiceInteraction&lt;&gt;(&quot;Choose which quick action you would like to perform&quot;,DTOAction.convertAll(QuickAction.getQuickActions(this.getModel())));</span>
+<span class="nc" id="L33">		this.setInteraction(nextAction);</span>
+<span class="nc" id="L34">	}</span>
+	
+	/**
+	 * Executes the following action on the given model
+	 */
+	@Override
+	public Action doAction() {
+<span class="nc" id="L41">		return this.nextAction.getReply().decode(getModel());</span>
+	}
+	
+	/**
+	 * returns a string representation of the object
+	 */
+	@Override
+	public String toString()
+	{
+<span class="fc" id="L50">		return &quot;Do a quick action&quot;;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

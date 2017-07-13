@@ -1,0 +1,8 @@
+#The first line is the king's city
+#The following lines specifies reward cards and the bonuses they include
+Milano;
+VictoryPointBonus,25;
+VictoryPointBonus,18;
+VictoryPointBonus,12;
+VictoryPointBonus,7;
+VictoryPointBonus,3;

@@ -1,0 +1,8 @@
+#FOR TEST USE ONLY
+#The first line is the king's city
+#The following lines specifies reward cards and the bonuses included
+Milano;
+CoinBonus,1|AssistantBonus,1;
+CoinBonus,2|AssistantBonus,2;
+CoinBonus,3|AssistantBonus,3;
+CoinBonus,4|AssistantBonus,4;
